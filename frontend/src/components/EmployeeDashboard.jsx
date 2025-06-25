@@ -147,7 +147,9 @@ const EmployeeDashboard = () => {
   //prueba chat
   const [chatVisible, setChatVisible] = useState(false);
   const [roomId, setRoomId] = useState(null);
-  //
+  // pruegba chat multiple
+  const [chatsActivos, setChatsActivos] = useState([]);
+
   const [customerId, setCustomerId] = useState('');
   const [employeeId, setEmployeeId] = useState('');
   const [servicio, setServicio] = useState('');
@@ -414,18 +416,29 @@ const EmployeeDashboard = () => {
 
   useEffect(() => {
     const handleChatIniciado = async ({ roomId, customerId, employeeId }) => {
-      setRoomId(roomId);
-      setChatVisible(true);
-
       socket.emit('servicio_en_curso', { customerId, employeeId: id, roomId });
-      // Determinar el ID del otro usuario-prueba
       const userId = id === customerId ? employeeId : customerId;
 
       try {
         // Obtener datos del otro usuario
         const res = await axios.get(`http://localhost:4500/solicitud/usuario/${userId}`);
-        setNombreOtroUsuario(res.data.nombre);
-        setFotoUrl(res.data.photoUrl);
+        const nombre = res.data.nombre;
+        const fotoUrl = res.data.photoUrl || 'https://i.pravatar.cc/150?img=47';
+
+        setChatsActivos((prev) => {
+          const chatExist = prev.some((chat) => chat.roomId === roomId);
+          if (chatExist) return prev;
+
+          return [
+            ...prev, {
+              roomId,
+              usuarioId: id,
+              remitente: settingsForm.name,
+              destinatario: nombre,
+              fotoUrl: fotoUrl,
+            }
+          ]
+        })
       } catch (error) {
         console.error('Error obteniendo nombre del otro usuario:', error);
       }
@@ -1614,7 +1627,22 @@ const EmployeeDashboard = () => {
         service={servicio}
         serviceId={serviceId}
       />
-      <ChatBox roomId={roomId} usuarioId={id} remitente={settingsForm.name} visible={chatVisible} nameUser={nombreOtroUsuario} imageUrl={fotoUrl} setVisible={setChatVisible} />
+      {/* chatbox */}
+      {chatsActivos.map((chat, index) => (
+        <ChatBox
+          key={chat.roomId}
+          roomId={chat.roomId}
+          usuarioId={chat.usuarioId}
+          remitente={chat.remitente}
+          visible={true}
+          destinatario={chat.destinatario}
+          imageUrl={chat.fotoUrl}
+          setVisible={() => {
+            setChatsActivos(prev => prev.filter(c => c.roomId !== chat.roomId));
+          }}
+          style={{ right: 20 + index * 340 }} // Ajusta para que los popups no se sobrepongan
+        />
+      ))}
 
     </>
   );

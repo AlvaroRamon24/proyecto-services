@@ -88,6 +88,8 @@ const CustomerDashboard = () => {
   //prueba chat
   const [chatVisible, setChatVisible] = useState(false);
   const [roomId, setRoomId] = useState(null);
+  //prueba chat multiples
+  const [chatsActivos, setChatsActivos] = useState([]);
   //
   const [reject, setReject] = useState([]);
   const [formData, setFormData] = useState({
@@ -205,23 +207,32 @@ const CustomerDashboard = () => {
   //----chat prueba
   // 1) Efecto que oye chat_iniciado y muestra el chat
   useEffect(() => {
-    const handleChatIniciado = ({ roomId, customerId, employeeId }) => {
-      setRoomId(roomId);        // guarda la sala
-      setChatVisible(true);     // muestra <ChatBox>
-
+    const handleChatIniciado = async ({ roomId, customerId, employeeId }) => {
       socket.emit('join_chat', { customerId, employeeId, isInitiator: false });
       const userId = id === customerId ? employeeId : customerId;
 
-      const obtenerNombre = async () => {
-        try {
-          const res = await axios.get(`http://localhost:4500/solicitud/usuario/${userId}`);
-          setNombreOtroUsuario(res.data.nombre);
-          setFotoUrl(res.data.photoUrl)
-        } catch (error) {
-          console.error('Error obteniendo nombre del otro usuario:', error);
-        }
-      };
-      obtenerNombre();
+      try {
+        const res = await axios.get(`http://localhost:4500/solicitud/usuario/${userId}`);
+        const nombre = res.data.nombre;
+        const fotoUrl = res.data.photoUrl || 'https://i.pravatar.cc/150?img=47';
+
+        setChatsActivos((prev) => {
+          const exist = prev.some((chat) => chat.roomId === roomId);
+          if (exist) return prev;
+
+          return [
+            ...prev, {
+              roomId,
+              usuarioId: id, // ID del cliente actual
+              remitente: formData.name, // Nombre del cliente actual
+              destinatario: nombre, // Nombre del otro usuario
+              fotoUrl: fotoUrl, // URL de la foto del otro usuario
+            }
+          ]
+        })
+      } catch (error) {
+        console.error('Error obteniendo nombre del otro usuario:', error);
+      }
     };
 
     socket.on('chat_iniciado', handleChatIniciado);
@@ -1067,8 +1078,7 @@ const CustomerDashboard = () => {
             </div>
           </div>
         </div>
-        {/* ------- prueba chat  -----*/}
-        <ChatBox roomId={roomId} usuarioId={id} remitente={formData.name} visible={chatVisible} nameUser={nombreOtroUsuario} imageUrl={fotoUrl} setVisible={setChatVisible} />
+       
         {/* Header Section----- verificar cuenta */}
         <div className="row mb-5">
           <div className="col-12">
@@ -1879,7 +1889,22 @@ const CustomerDashboard = () => {
           </header>
           {/* Content Area - CENTRADO ENTRE LOS DOS SIDEBARS */}
           {renderContent()}
-          <ChatBox roomId={roomId} usuarioId={id} remitente={formData.name} visible={chatVisible} nameUser={nombreOtroUsuario} imageUrl={fotoUrl} setVisible={setChatVisible} />
+          {/* ChatBox */}
+          {chatsActivos.map((chat, index) => (
+            <ChatBox
+              key={chat.roomId}
+              roomId={chat.roomId}
+              usuarioId={chat.usuarioId}
+              remitente={chat.remitente}
+              visible={true}
+              destinatario={chat.destinatario}
+              imageUrl={chat.fotoUrl}
+              setVisible={() => {
+                setChatsActivos(prev => prev.filter(c => c.roomId !== chat.roomId));
+              }}
+              style={{ right: 20 + index * 340 }} // Ajusta para que los popups no se sobrepongan
+            />
+          ))}
 
         </div>
       </div>

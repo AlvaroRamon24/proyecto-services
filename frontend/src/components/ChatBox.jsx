@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import socket from '../socket.js';
 import axios from 'axios';
 
-export default function ChatBox({ roomId, usuarioId, remitente, visible, nameUser, imageUrl, setVisible }) {
+export default function ChatBox({ roomId, usuarioId, destinatario, remitente, visible, imageUrl, setVisible, style }) {
   const [mensajes, setMensajes] = useState([]);
   const [nuevo, setNuevo] = useState('');
   const mensajesEndRef = useRef(null);
@@ -10,7 +10,8 @@ export default function ChatBox({ roomId, usuarioId, remitente, visible, nameUse
   const typingTimeout = useRef(null);
 
   useEffect(() => {
-    const recibir = (mensaje) => {
+    const recibir = (mensajerecibidoRoomId, mensaje) => {
+      if(mensajerecibidoRoomId !== roomId) return;
       console.log('Llegó mensaje', mensaje);
 
       setMensajes((prev) => [...prev, mensaje]);
@@ -20,7 +21,7 @@ export default function ChatBox({ roomId, usuarioId, remitente, visible, nameUse
     console.log('Suscrito a nuevo_mensaje xd');
 
     return () => socket.off('nuevo_mensaje', recibir);
-  }, [roomId, visible]);
+  }, [roomId]);
 
   useEffect(() => {
     // 👇 Scroll automático al final cada vez que cambia la lista de mensajes
@@ -48,7 +49,7 @@ export default function ChatBox({ roomId, usuarioId, remitente, visible, nameUse
 
     const mensaje = {
       de: usuarioId,
-      nombre: nameUser,
+      nombre: destinatario,
       texto: nuevo,
       hora: new Date().toLocaleTimeString([], {
         hour: '2-digit',
@@ -64,11 +65,11 @@ export default function ChatBox({ roomId, usuarioId, remitente, visible, nameUse
   if (!visible) return null;
 
   return (
-    <div style={chatStyle.container}>
+    <div style={{...chatStyle.container, ...style}}>
       <div style={chatStyle.header}>
         <img
           src={imageUrl}
-          alt={nameUser}
+          alt={destinatario}
           style={{
             width: '30px',
             height: '30px',
@@ -77,7 +78,7 @@ export default function ChatBox({ roomId, usuarioId, remitente, visible, nameUse
             marginRight: '10px',
           }}
         />
-        {nameUser}
+        {destinatario}
         <button
           onClick={() => setVisible(false)}
           style={{
@@ -103,7 +104,7 @@ export default function ChatBox({ roomId, usuarioId, remitente, visible, nameUse
             }}
           >
             <div style={{ fontSize: '11px', marginBottom: 0, opacity: 0.6 }}>
-              {m.de === usuarioId ? 'yo' : nameUser}
+              {m.de === usuarioId ? 'yo' : destinatario}
             </div>
             {m.texto}
             <div style={chatStyle.hora}>{m.hora}</div>
