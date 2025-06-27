@@ -5,6 +5,8 @@ import authRouter from '../routers/auth.routers.js';
 import customerRouter from '../routers/customer.routers.js';
 import employeeRouter from '../routers/employee.routers.js';
 import solicitudRouter from '../routers/solicitud.router.js';
+import userRouter from '../routers/user.router.js';
+import mensajeRouter from '../routers/mensaje.router.js';
 
 const app = express();
 
@@ -26,6 +28,7 @@ app.use('/auth', authRouter);
 app.use('/customer', customerRouter);
 app.use('/employee', employeeRouter);
 app.use('/solicitud', solicitudRouter);
-
+app.use('/users', userRouter);
+app.use('/message', mensajeRouter);
 
 export default app;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import {
   User,
   Bell,
@@ -88,8 +88,11 @@ const CustomerDashboard = () => {
   //prueba chat
   const [chatVisible, setChatVisible] = useState(false);
   const [roomId, setRoomId] = useState(null);
+  const [chatsCerrados, setChatsCerrados] = useState([]);
   //prueba chat multiples
   const [chatsActivos, setChatsActivos] = useState([]);
+  const [mensajesPorSala, setMensajesPorSala] = useState({});
+
   //
   const [reject, setReject] = useState([]);
   const [formData, setFormData] = useState({
@@ -186,7 +189,20 @@ const CustomerDashboard = () => {
     { id: 'settings', label: 'Editar Perfil', icon: Settings }
   ];
 
-  //socket connect
+  useEffect(() => {
+    const getUsersChats = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4500/users/chats/customer/${id}`)
+        if (response.status === 200) {
+          setChatsCerrados(response.data);
+        }
+      } catch (error) {
+        console.error('Error al obtener los chats cerrados:', error);
+      }
+    }
+    getUsersChats();
+  }, [])
+
   useEffect(() => {
     // Conexión inicial: registramos el ID del trabajador
     socket.emit('register_customer', id);
@@ -224,7 +240,7 @@ const CustomerDashboard = () => {
             ...prev, {
               roomId,
               usuarioId: id, // ID del cliente actual
-              remitente: formData.name, // Nombre del cliente actual
+              remitente: data.name, // Nombre del cliente actual
               destinatario: nombre, // Nombre del otro usuario
               fotoUrl: fotoUrl, // URL de la foto del otro usuario
             }
@@ -1078,7 +1094,7 @@ const CustomerDashboard = () => {
             </div>
           </div>
         </div>
-       
+
         {/* Header Section----- verificar cuenta */}
         <div className="row mb-5">
           <div className="col-12">
@@ -1688,8 +1704,39 @@ const CustomerDashboard = () => {
                   </h6>
                   <div className="small">
                     <div className="mb-2 pb-2 border-bottom">
-                      <div className="fw-medium">Servicio completado</div>
-                      <div className="text-muted">Hace 2 horas</div>
+                      <div className="sidebar-chats" style={{ cursor: "pointer" }}>
+                        {chatsCerrados.map((chat, index) => (
+                          <div
+                            key={chat.roomId}
+                            onClick={async () => {
+                              try {
+                                // 1. Pedimos historial de mensajes desde el backend
+                                const response = await axios.get(`http://localhost:4500/message/history/${chat.roomId}`);
+                                const historial = response.data; // suponiendo que devuelve array de mensajes
+
+                                // 2. Abrimos el chat nuevamente
+                                setChatsActivos(prev => [...prev, chat]);
+
+                                // 3. Quitamos de la lista de cerrados
+                                setChatsCerrados(prev => prev.filter(c => c.roomId !== chat.roomId));
+
+                                // 4. Pasamos los mensajes al ChatBox mediante mensajesPorSala
+                                setMensajesPorSala(prev => ({
+                                  ...prev,
+                                  [chat.roomId]: historial
+                                }));
+                              } catch (err) {
+                                console.error('Error al cargar historial:', err);
+                              }
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <img src={chat.fotoUrl} width={30} height={30} style={{ borderRadius: '50%' }} />
+                            {chat.destinatario}
+                          </div>
+                        ))}
+
+                      </div>
                     </div>
                     <div className="mb-2 pb-2 border-bottom">
                       <div className="fw-medium">Nueva reserva</div>
@@ -1900,10 +1947,29 @@ const CustomerDashboard = () => {
               destinatario={chat.destinatario}
               imageUrl={chat.fotoUrl}
               setVisible={() => {
+                const chatCerrado = {
+                  roomId: chat.roomId,
+                  usuarioId: chat.usuarioId,
+                  destinatario: chat.destinatario,
+                  remitente: chat.remitente,
+                  fotoUrl: chat.fotoUrl,
+                }
                 setChatsActivos(prev => prev.filter(c => c.roomId !== chat.roomId));
+                setChatsCerrados(prev => [chatCerrado, ...prev]);
+
+                axios.post(`http://localhost:4500/users/chats-close`, chatCerrado)
+                  .catch(err => console.error('Error al guardar chat cerrado:', err));
               }}
-              style={{ right: 20 + index * 340 }} // Ajusta para que los popups no se sobrepongan
+              style={{ right: 20 + index * 340 }}
+              mensajesIniciales={mensajesPorSala[chat.roomId] || []}
+              onMensajesUpdate={(roomId, nuevosMensajes) => {
+                setMensajesPorSala(prev => ({
+                  ...prev,
+                  [roomId]: nuevosMensajes
+                }));
+              }}
             />
+
           ))}
 
         </div>
