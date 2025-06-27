@@ -3,21 +3,19 @@ import Customer from "../models/Customer.js";
 import Employee from "../models/Employee.js";
 
 export const saveMensaje = async (req, res) => {
-    const { roomId, customerId, employeeId, de, nombre, texto, hora } = req.body;
+    const { roomId, mensaje } = req.body;
+    const { de, texto, hora } = mensaje;
 
     try {
         const nuevoMensaje = new Mensaje({
-            roomId,
-            customerId,
-            employeeId,
-            de,
-            nombre,
-            texto,
-            hora
+            roomId: roomId,
+            de: de,
+            texto: texto,
+            hora: hora,
         });
-
         await nuevoMensaje.save();
         res.status(201).json(nuevoMensaje);
+
     } catch (error) {
         console.error("Error al guardar el mensaje:", error);
         res.status(500).json({ message: "Error al guardar el mensaje" });

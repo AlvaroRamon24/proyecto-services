@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import socket from '../socket.js';
+import axios from 'axios';
 
 export default function ChatBox({
   roomId,
@@ -61,7 +62,7 @@ export default function ChatBox({
     };
   }, []);
 
-  const enviar = () => {
+  const enviar = async () => {
     if (!nuevo.trim()) return;
 
     const mensaje = {
@@ -74,10 +75,14 @@ export default function ChatBox({
         hour12: true
       }),
     };
-
     socket.emit('enviar_mensaje', { roomId, mensaje });
     socket.emit('stopTyping', { roomId });
 
+    try {
+       await axios.post('http://localhost:4500/message/', { roomId, mensaje });
+    } catch (error) {
+      console.error('Error al enviar el mensaje:', error);
+    }
     setNuevo('');
   };
 
