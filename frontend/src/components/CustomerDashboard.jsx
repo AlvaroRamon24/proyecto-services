@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import {
   User,
   Bell,
@@ -189,7 +189,20 @@ const CustomerDashboard = () => {
     { id: 'settings', label: 'Editar Perfil', icon: Settings }
   ];
 
-  //socket connect
+  useEffect(() => {
+    const getUsersChats = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4500/users/chats/customer/${id}`)
+        if (response.status === 200) {
+          setChatsCerrados(response.data);
+        }
+      } catch (error) {
+        console.error('Error al obtener los chats cerrados:', error);
+      }
+    }
+    getUsersChats();
+  }, [])
+
   useEffect(() => {
     // Conexión inicial: registramos el ID del trabajador
     socket.emit('register_customer', id);
@@ -1691,12 +1704,14 @@ const CustomerDashboard = () => {
                   </h6>
                   <div className="small">
                     <div className="mb-2 pb-2 border-bottom">
-                      <div className="sidebar-chats" style={{ cursor: "pointer"}}>
-                        {chatsCerrados.map((chat, index) => (
-                          <div key={index} onClick={() => {
-                            setChatsActivos(prev => [...prev, chat]);
-                            setChatsCerrados(prev => prev.filter(c => c.roomId !== chat.roomId));
-                          }}>
+                      <div className="sidebar-chats" style={{ cursor: "pointer" }}>
+                        {chatsCerrados.map((chat) => (
+                          <div
+                            key={chat.roomId}
+                            onClick={() => {
+                              setChatsActivos(prev => [...prev, chat]);
+                              setChatsCerrados(prev => prev.filter(c => c.roomId !== chat.roomId));
+                            }}>
                             <img src={chat.fotoUrl} width={30} height={30} style={{ borderRadius: '50%' }} />
                             {chat.destinatario}
                           </div>
@@ -1904,6 +1919,7 @@ const CustomerDashboard = () => {
           {/* ChatBox */}
           {chatsActivos.map((chat, index) => (
             <ChatBox
+              key={chat.roomId}
               roomId={chat.roomId}
               usuarioId={chat.usuarioId}
               remitente={chat.remitente}
@@ -1911,17 +1927,18 @@ const CustomerDashboard = () => {
               destinatario={chat.destinatario}
               imageUrl={chat.fotoUrl}
               setVisible={() => {
+                const chatCerrado = {
+                  roomId: chat.roomId,
+                  usuarioId: chat.usuarioId,
+                  destinatario: chat.destinatario,
+                  remitente: chat.remitente,
+                  fotoUrl: chat.fotoUrl,
+                }
                 setChatsActivos(prev => prev.filter(c => c.roomId !== chat.roomId));
-                setChatsCerrados(prev => [
-                  ...prev,
-                  {
-                    roomId: chat.roomId,
-                    usuarioId: chat.usuarioId,
-                    destinatario: chat.destinatario,
-                    remitente: chat.remitente,
-                    fotoUrl: chat.fotoUrl,
-                  }
-                ]);
+                setChatsCerrados(prev => [chatCerrado, ...prev]);
+
+                axios.post(`http://localhost:4500/users/chats-close`, chatCerrado)
+                  .catch(err => console.error('Error al guardar chat cerrado:', err));
               }}
               style={{ right: 20 + index * 340 }}
               mensajesIniciales={mensajesPorSala[chat.roomId] || []}
