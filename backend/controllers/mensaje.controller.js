@@ -24,9 +24,10 @@ export const saveMensaje = async (req, res) => {
 
 export const getMensajesByRoomId = async (req, res) => {
     const { roomId } = req.params;
-
+    console.log("Obteniendo mensajes para roomId:", roomId);
     try {
         const mensajes = await Mensaje.find({ roomId }).sort({ createdAt: 1 });
+        console.log("Mensajes obtenidos:", mensajes);
         res.status(200).json(mensajes);
     } catch (error) {
         console.error("Error al obtener los mensajes:", error);

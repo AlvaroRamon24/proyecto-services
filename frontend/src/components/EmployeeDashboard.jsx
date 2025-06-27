@@ -149,6 +149,8 @@ const EmployeeDashboard = () => {
   const [roomId, setRoomId] = useState(null);
   // pruegba chat multiple
   const [chatsActivos, setChatsActivos] = useState([]);
+  const [mensajesPorSala, setMensajesPorSala] = useState({});
+  const [chatsCerrados, setChatsCerrados] = useState([]);
 
   const [customerId, setCustomerId] = useState('');
   const [employeeId, setEmployeeId] = useState('');
@@ -195,6 +197,20 @@ const EmployeeDashboard = () => {
     setServiceId(serviceId);
     setModalOpen(true);
   };
+
+  useEffect(() => {
+    const getUsersChats = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4500/users/chats/customer/${id}`)
+        if (response.status === 200) {
+          setChatsCerrados(response.data);
+        }
+      } catch (error) {
+        console.error('Error al obtener los chats cerrados:', error);
+      }
+    }
+    getUsersChats();
+  }, [])
 
   // Cargar datos del empleado al montar el componente
   useEffect(() => {
@@ -1474,13 +1490,46 @@ const EmployeeDashboard = () => {
                 {/* Estado de trabajo rápido */}
                 <div className="d-none d-lg-flex align-items-center me-3 bg-light px-3 py-2 rounded-pill">
                   <Activity size={16} className="text-success me-2" />
+                  
+                  {/* Estado de trabajo rápido */}
                   <span className="small fw-medium text-success">Disponible</span>
+                  {chatsCerrados.map((chat, index) => (
+                    <div
+                      key={chat.roomId}
+                      onClick={async () => {
+                        try {
+                          // 1. Pedimos historial de mensajes desde el backend
+                          const response = await axios.get(`http://localhost:4500/message/history/${chat.roomId}`);
+                          const historial = response.data; // suponiendo que devuelve array de mensajes
+
+                          // 2. Abrimos el chat nuevamente
+                          setChatsActivos(prev => [...prev, chat]);
+
+                          // 3. Quitamos de la lista de cerrados
+                          setChatsCerrados(prev => prev.filter(c => c.roomId !== chat.roomId));
+
+                          // 4. Pasamos los mensajes al ChatBox mediante mensajesPorSala
+                          setMensajesPorSala(prev => ({
+                            ...prev,
+                            [chat.roomId]: historial
+                          }));
+                        } catch (err) {
+                          console.error('Error al cargar historial:', err);
+                        }
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <img src={chat.fotoUrl} width={30} height={30} style={{ borderRadius: '50%' }} />
+                      {chat.destinatario}
+                    </div>
+                  ))}
                 </div>
 
 
                 <li onClick={() => setChatVisible(true)} style={{ cursor: 'pointer' }}>
                   💬 Chat
                 </li>
+
 
                 {/* Notificaciones Dropdown */}
                 <div className="position-relative me-2 dropdown-container">
@@ -1638,9 +1687,27 @@ const EmployeeDashboard = () => {
           destinatario={chat.destinatario}
           imageUrl={chat.fotoUrl}
           setVisible={() => {
+            const chatCerrado = {
+              roomId: chat.roomId,
+              usuarioId: chat.usuarioId,
+              destinatario: chat.destinatario,
+              remitente: chat.remitente,
+              fotoUrl: chat.fotoUrl,
+            }
             setChatsActivos(prev => prev.filter(c => c.roomId !== chat.roomId));
+            setChatsCerrados(prev => [chatCerrado, ...prev]);
+
+            axios.post(`http://localhost:4500/users/chats-close`, chatCerrado)
+              .catch(err => console.error('Error al guardar chat cerrado:', err));
           }}
-          style={{ right: 20 + index * 340 }} // Ajusta para que los popups no se sobrepongan
+          style={{ right: 20 + index * 340 }}
+          mensajesIniciales={mensajesPorSala[chat.roomId] || []}
+          onMensajesUpdate={(roomId, nuevosMensajes) => {
+            setMensajesPorSala(prev => ({
+              ...prev,
+              [roomId]: nuevosMensajes
+            }));
+          }}
         />
       ))}
 

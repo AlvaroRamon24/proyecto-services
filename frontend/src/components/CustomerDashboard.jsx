@@ -1705,17 +1705,37 @@ const CustomerDashboard = () => {
                   <div className="small">
                     <div className="mb-2 pb-2 border-bottom">
                       <div className="sidebar-chats" style={{ cursor: "pointer" }}>
-                        {chatsCerrados.map((chat) => (
+                        {chatsCerrados.map((chat, index) => (
                           <div
                             key={chat.roomId}
-                            onClick={() => {
-                              setChatsActivos(prev => [...prev, chat]);
-                              setChatsCerrados(prev => prev.filter(c => c.roomId !== chat.roomId));
-                            }}>
+                            onClick={async () => {
+                              try {
+                                // 1. Pedimos historial de mensajes desde el backend
+                                const response = await axios.get(`http://localhost:4500/message/history/${chat.roomId}`);
+                                const historial = response.data; // suponiendo que devuelve array de mensajes
+
+                                // 2. Abrimos el chat nuevamente
+                                setChatsActivos(prev => [...prev, chat]);
+
+                                // 3. Quitamos de la lista de cerrados
+                                setChatsCerrados(prev => prev.filter(c => c.roomId !== chat.roomId));
+
+                                // 4. Pasamos los mensajes al ChatBox mediante mensajesPorSala
+                                setMensajesPorSala(prev => ({
+                                  ...prev,
+                                  [chat.roomId]: historial
+                                }));
+                              } catch (err) {
+                                console.error('Error al cargar historial:', err);
+                              }
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          >
                             <img src={chat.fotoUrl} width={30} height={30} style={{ borderRadius: '50%' }} />
                             {chat.destinatario}
                           </div>
                         ))}
+
                       </div>
                     </div>
                     <div className="mb-2 pb-2 border-bottom">
