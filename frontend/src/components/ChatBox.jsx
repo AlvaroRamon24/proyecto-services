@@ -1,34 +1,51 @@
 import { useEffect, useState, useRef } from 'react';
 import socket from '../socket.js';
-import axios from 'axios';
 
-export default function ChatBox({ roomId, usuarioId, destinatario, remitente, visible, imageUrl, setVisible, style }) {
+export default function ChatBox({
+  roomId,
+  onMensajesUpdate = () => {},
+  mensajesIniciales,
+  usuarioId,
+  destinatario,
+  remitente,
+  visible,
+  imageUrl,
+  setVisible,
+  style
+}) {
   const [mensajes, setMensajes] = useState([]);
   const [nuevo, setNuevo] = useState('');
   const mensajesEndRef = useRef(null);
   const [escribiendo, setEscribiendo] = useState(null);
   const typingTimeout = useRef(null);
 
+  // Inicializa con mensajes pasados desde el padre
+  useEffect(() => {
+    setMensajes(mensajesIniciales || []);
+  }, [mensajesIniciales]);
+
+  // Escucha nuevos mensajes del socket
   useEffect(() => {
     const recibir = (mensajerecibidoRoomId, mensaje) => {
-      if(mensajerecibidoRoomId !== roomId) return;
-      console.log('Llegó mensaje', mensaje);
+      if (mensajerecibidoRoomId !== roomId) return;
 
-      setMensajes((prev) => [...prev, mensaje]);
+      setMensajes(prev => {
+        const nuevosMensajes = [...prev, mensaje];
+        onMensajesUpdate(roomId, nuevosMensajes);
+        return nuevosMensajes;
+      });
     };
 
     socket.on('nuevo_mensaje', recibir);
-    console.log('Suscrito a nuevo_mensaje xd');
-
     return () => socket.off('nuevo_mensaje', recibir);
-  }, [roomId]);
+  }, [roomId, onMensajesUpdate]);
 
+  // Scroll automático
   useEffect(() => {
-    // 👇 Scroll automático al final cada vez que cambia la lista de mensajes
     mensajesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [mensajes, escribiendo]);
 
-
+  // Escribiendo...
   useEffect(() => {
     socket.on('usuarioEscribiendo', (nombre) => {
       setEscribiendo(`${nombre} está escribiendo...`);
@@ -49,7 +66,7 @@ export default function ChatBox({ roomId, usuarioId, destinatario, remitente, vi
 
     const mensaje = {
       de: usuarioId,
-      nombre: destinatario,
+      nombre: remitente,
       texto: nuevo,
       hora: new Date().toLocaleTimeString([], {
         hour: '2-digit',
@@ -57,15 +74,17 @@ export default function ChatBox({ roomId, usuarioId, destinatario, remitente, vi
         hour12: true
       }),
     };
+
     socket.emit('enviar_mensaje', { roomId, mensaje });
     socket.emit('stopTyping', { roomId });
+
     setNuevo('');
   };
 
   if (!visible) return null;
 
   return (
-    <div style={{...chatStyle.container, ...style}}>
+    <div style={{ ...chatStyle.container, ...style }}>
       <div style={chatStyle.header}>
         <img
           src={imageUrl}
@@ -121,13 +140,13 @@ export default function ChatBox({ roomId, usuarioId, destinatario, remitente, vi
         <input
           value={nuevo}
           onChange={(e) => {
-            setNuevo(e.target.value)
+            setNuevo(e.target.value);
             socket.emit('typing', { roomId, nombre: remitente });
 
             clearTimeout(typingTimeout.current);
             typingTimeout.current = setTimeout(() => {
               socket.emit('stopTyping', { roomId });
-            }, 1000); // 2 segundos sin escribir
+            }, 1000);
           }}
           style={chatStyle.input}
           placeholder="Escribe un mensaje..."

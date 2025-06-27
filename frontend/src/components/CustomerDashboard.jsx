@@ -88,8 +88,11 @@ const CustomerDashboard = () => {
   //prueba chat
   const [chatVisible, setChatVisible] = useState(false);
   const [roomId, setRoomId] = useState(null);
+  const [chatsCerrados, setChatsCerrados] = useState([]);
   //prueba chat multiples
   const [chatsActivos, setChatsActivos] = useState([]);
+  const [mensajesPorSala, setMensajesPorSala] = useState({});
+
   //
   const [reject, setReject] = useState([]);
   const [formData, setFormData] = useState({
@@ -224,7 +227,7 @@ const CustomerDashboard = () => {
             ...prev, {
               roomId,
               usuarioId: id, // ID del cliente actual
-              remitente: formData.name, // Nombre del cliente actual
+              remitente: data.name, // Nombre del cliente actual
               destinatario: nombre, // Nombre del otro usuario
               fotoUrl: fotoUrl, // URL de la foto del otro usuario
             }
@@ -1078,7 +1081,7 @@ const CustomerDashboard = () => {
             </div>
           </div>
         </div>
-       
+
         {/* Header Section----- verificar cuenta */}
         <div className="row mb-5">
           <div className="col-12">
@@ -1688,8 +1691,17 @@ const CustomerDashboard = () => {
                   </h6>
                   <div className="small">
                     <div className="mb-2 pb-2 border-bottom">
-                      <div className="fw-medium">Servicio completado</div>
-                      <div className="text-muted">Hace 2 horas</div>
+                      <div className="sidebar-chats" style={{ cursor: "pointer"}}>
+                        {chatsCerrados.map((chat, index) => (
+                          <div key={index} onClick={() => {
+                            setChatsActivos(prev => [...prev, chat]);
+                            setChatsCerrados(prev => prev.filter(c => c.roomId !== chat.roomId));
+                          }}>
+                            <img src={chat.fotoUrl} width={30} height={30} style={{ borderRadius: '50%' }} />
+                            {chat.destinatario}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                     <div className="mb-2 pb-2 border-bottom">
                       <div className="fw-medium">Nueva reserva</div>
@@ -1892,7 +1904,6 @@ const CustomerDashboard = () => {
           {/* ChatBox */}
           {chatsActivos.map((chat, index) => (
             <ChatBox
-              key={chat.roomId}
               roomId={chat.roomId}
               usuarioId={chat.usuarioId}
               remitente={chat.remitente}
@@ -1901,9 +1912,27 @@ const CustomerDashboard = () => {
               imageUrl={chat.fotoUrl}
               setVisible={() => {
                 setChatsActivos(prev => prev.filter(c => c.roomId !== chat.roomId));
+                setChatsCerrados(prev => [
+                  ...prev,
+                  {
+                    roomId: chat.roomId,
+                    usuarioId: chat.usuarioId,
+                    destinatario: chat.destinatario,
+                    remitente: chat.remitente,
+                    fotoUrl: chat.fotoUrl,
+                  }
+                ]);
               }}
-              style={{ right: 20 + index * 340 }} // Ajusta para que los popups no se sobrepongan
+              style={{ right: 20 + index * 340 }}
+              mensajesIniciales={mensajesPorSala[chat.roomId] || []}
+              onMensajesUpdate={(roomId, nuevosMensajes) => {
+                setMensajesPorSala(prev => ({
+                  ...prev,
+                  [roomId]: nuevosMensajes
+                }));
+              }}
             />
+
           ))}
 
         </div>
