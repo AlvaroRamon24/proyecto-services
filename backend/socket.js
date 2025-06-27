@@ -29,6 +29,7 @@ export function registerSocketEvents(io) {
             }
         });
 
+        
         socket.on('enviar_mensaje', ({ roomId, mensaje }) => {
             console.log(`Mensaje recibido en ${roomId}:`, mensaje);
             io.to(roomId).emit('nuevo_mensaje', roomId, mensaje);
