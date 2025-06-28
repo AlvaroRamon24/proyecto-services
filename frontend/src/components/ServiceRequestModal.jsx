@@ -1,16 +1,52 @@
-// src/components/ServiceRequestModal.jsx
 import { useState } from 'react';
 import axios from 'axios';
+import SendIcon from '@mui/icons-material/Send';
+import { LoadingButton } from '@mui/lab';
+
+// Lista personalizada de malas palabras en español
+const palabrasProhibidas = [
+  'puta', 'puto', 'mierda', 'pendejo', 'carajo', 'conchudo', 'webon',
+  'imbecil', 'estupido', 'huevon', 'cojudo', 'maldito','perra'
+];
+
+// Función para limpiar el comentario
+const limpiarComentario = (texto) => {
+  const mapa = {
+    '@': 'a', '4': 'a',
+    '1': 'i', '!': 'i', '¡': 'i',
+    '3': 'e',
+    '0': 'o',
+    '$': 's',
+    '*': '',
+    '.': '', ',': '', '-': '', '_': '', '|': '',
+    '#': '', '+': '', '(': '', ')': ''
+  };
+
+  const normalizado = texto
+    .toLowerCase()
+    .split('')
+    .map(c => mapa[c] || c)
+    .join('');
+
+  const palabras = normalizado.split(/\s+/);
+  const resultado = palabras.filter(p => !palabrasProhibidas.includes(p));
+  return resultado.join(' ');
+};
 
 const ServiceRequestModal = ({ isOpen, onClose, employeeId, customerId, service }) => {
   const [comment, setComment] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const enviarSolicitud = async () => {
+    setLoading(true);
+
+    const comentarioFiltrado = limpiarComentario(comment);
+
     const payload = {
       customerId,
       employeeId,
       service,
-      comment
+      comment: comentarioFiltrado
     };
 
     try {
@@ -19,6 +55,8 @@ const ServiceRequestModal = ({ isOpen, onClose, employeeId, customerId, service 
     } catch (error) {
       console.error('Error al enviar solicitud:', error);
       alert('Error al enviar la solicitud');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -27,7 +65,9 @@ const ServiceRequestModal = ({ isOpen, onClose, employeeId, customerId, service 
   return (
     <div style={styles.overlay}>
       <div style={styles.modal}>
-        <h2 style={{fontSize:"19px"}}>Solicitar servicio: <strong>{service}</strong></h2>
+        <h2 style={{ fontSize: "19px" }}>
+          Solicitar servicio: <strong>{service}</strong>
+        </h2>
         <textarea
           rows={5}
           placeholder="Escribe un comentario para el trabajador..."
@@ -37,14 +77,23 @@ const ServiceRequestModal = ({ isOpen, onClose, employeeId, customerId, service 
         />
         <div style={styles.buttons}>
           <button onClick={onClose} style={styles.cancel}>Cancelar</button>
-          <button onClick={enviarSolicitud} style={styles.submit} className='btn btn-primary'>Pedir servicio</button>
+          <LoadingButton
+            onClick={enviarSolicitud}
+            endIcon={<SendIcon />}
+            loading={loading}
+            loadingPosition="end"
+            variant="contained"
+            color="primary"
+          >
+            Pedir servicio
+          </LoadingButton>
         </div>
       </div>
     </div>
   );
 };
 
-// Estilos básicos
+// Estilos
 const styles = {
   overlay: {
     position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
@@ -62,9 +111,6 @@ const styles = {
   },
   cancel: {
     marginRight: '1rem', padding: '0.5rem 1rem', background: '#ccc', border: 'none', borderRadius: '5px'
-  },
-  submit: {
-    padding: '0.5rem 1rem', color: 'white', border: 'none', borderRadius: '5px'
   }
 };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 import {
   User,
   Bell,
@@ -34,11 +34,27 @@ import {
   Plus,
   Filter
 } from 'lucide-react';
+import React from 'react';
 import axios from 'axios';
 import { useParams, Outlet } from 'react-router-dom';
 import '../App.css';
 import ChatBox from './ChatBox.jsx';
 import socket from '../socket';
+import AlertTitle from '@mui/material/AlertTitle';
+import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import Divider from '@mui/material/Divider';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import Avatar from '@mui/material/Avatar';
+import Typography from '@mui/material/Typography';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import ReviewPopup from './ReviewPopup.jsx';
+
 const citiesWithDistricts = {
   Lima: [
     "Ancón", "Ate", "Barranco", "Breña", "Carabayllo", "Chaclacayo", "Chorrillos",
@@ -92,6 +108,10 @@ const CustomerDashboard = () => {
   //prueba chat multiples
   const [chatsActivos, setChatsActivos] = useState([]);
   const [mensajesPorSala, setMensajesPorSala] = useState({});
+  const [chatsReabiertos, setChatsReabiertos] = useState([]);
+
+  const [showPopup, setShowPopup] = useState(false);
+  const [servicioSeleccionado, setServicioSeleccionado] = useState(null);
 
   //
   const [reject, setReject] = useState([]);
@@ -1098,32 +1118,52 @@ const CustomerDashboard = () => {
         {/* Header Section----- verificar cuenta */}
         <div className="row mb-5">
           <div className="col-12">
-            <div className="card border-0 shadow-lg" style={{
-              background: '#7eb975',
-
-              borderRadius: '20px'
-            }}>
-              <div className="card-body p-3">
-                <div className="d-flex align-items-center">
-                  <div className="position-relative">
-                  </div>
-                  <div className="ms-4 text-white d-flex align-items-center justify-content-between w-100">
-                    <div className="d-flex align-items-center">
-                      <i className="bi bi-exclamation-triangle-fill text-warning fs-1 me-3"></i>
-                      <div>
-                        <h2 className="mb-1 fw-bold">Atención</h2>
-                        <p className="mb-1 opacity-40">
-                          Tu cuenta aún no está verificada. Verifícala ahora para poder pedir servicios. ¡Es muy rápido!
-                        </p>
-                      </div>
-                    </div>
-                    <button className="btn btn-primary btn-lg me-4">Verificar</button>
-                  </div>
-                </div>
+            <div
+              className="card border-0 shadow-lg"
+              style={{
+                borderRadius: '20px',
+              }}
+            >
+              <div className="card-body p-0">
+                <Stack spacing={0} sx={{ width: '100%' }}>
+                  <Alert
+                    severity="warning"
+                    variant="outlined"
+                    sx={{
+                      borderRadius: '20px',
+                      border: "2px solid",
+                      padding: '16px 20px',
+                      borderColor: '#f5b041', // color personalizado del borde
+                      color: '#000',
+                    }}
+                    action={
+                      <Button
+                        size="medium"
+                        variant="outlined"
+                        sx={{
+                          fontWeight: 'bold',
+                          borderRadius: '10px',
+                          border: "2px solid",
+                          color: '#000',
+                          borderColor: '#f5b041', // mismo color que el alert
+                          '&:hover': {
+                            borderColor: '#d4ac0d',
+                            backgroundColor: '#fef9e7',
+                          },
+                        }}
+                      >
+                        VERIFICAR
+                      </Button>
+                    }
+                  >
+                    Tu cuenta aún no está verificada. Verifícala ahora para poder pedir servicios.
+                  </Alert>
+                </Stack>
               </div>
             </div>
           </div>
         </div>
+
 
         {reject.length > 0 && (
           <div className="row mb-5">
@@ -1278,9 +1318,16 @@ const CustomerDashboard = () => {
                         </div>
 
                         <div className="card-footer bg-transparent text-center pb-3">
-                          <button className="btn btn-primary btn-sm rounded-pill px-4">
+                          <button
+                            className="btn btn-primary btn-sm rounded-pill px-4"
+                            onClick={() => {
+                              setServicioSeleccionado(element); // guarda la data del servicio actual
+                              setShowPopup(true);               // muestra el popup
+                            }}
+                          >
                             Finalizar Servicio
                           </button>
+
                         </div>
                       </div>
                     ))}
@@ -1467,6 +1514,7 @@ const CustomerDashboard = () => {
 
   return (
     <>
+
       <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
       <style>{`
         .btn-ghost:hover {
@@ -1539,6 +1587,7 @@ const CustomerDashboard = () => {
 
 
       <div className="min-h-screen bg-light">
+
         {/* Sidebar Izquierdo (Desktop) */}
         <div className="position-fixed top-0 start-0 h-100 shadow-lg d-none d-lg-block sidebar-desktop" style={{ zIndex: 1000 }}>
           <div className="p-4">
@@ -1561,7 +1610,7 @@ const CustomerDashboard = () => {
                   className={`btn w-100 text-start mb-2 d-flex align-items-center ${activeSection === item.id ? 'btn-outline-light' : 'btn-outline-light'
                     }`}
                 >
-                  <Icon size={36} color="#3a88fe" strokeWidth={1} className="me-3" />
+                  <Icon size={40} color="#3a88fe" strokeWidth={1.5} className="me-3" />
                   {item.label}
                 </button>
               );
@@ -1646,26 +1695,62 @@ const CustomerDashboard = () => {
           <nav className="p-3">
             {/* Estadísticas */}
             <div className="mb-3">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body p-3">
-                  <h6 className="card-title mb-2 d-flex align-items-center">
-                    <BarChart3 size={18} className="me-2 text-primary" />
-                    Estadísticas
-                  </h6>
-                  <div className="row text-center">
-                    <div className="col-6">
-                      <div className="border-end">
-                        <h5 className="mb-0 text-primary">127</h5>
-                        <small className="text-muted">Servicios</small>
-                      </div>
-                    </div>
-                    <div className="col-6">
-                      <h5 className="mb-0 text-success">42</h5>
-                      <small className="text-muted">Completados</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <Card variant="outlined" sx={{ borderRadius: '16px', boxShadow: 3 }}>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="bold" mb={2}>
+                    Contactos
+                  </Typography>
+                  <List>
+                    {chatsCerrados.map((chat, index) => {
+                      const estaActivo = chatsActivos.some(c => c.roomId === chat.roomId);
+                      return (
+                        <React.Fragment key={chat.roomId}>
+                          <ListItem
+                            alignItems="flex-start"
+                            sx={{
+                              cursor: estaActivo ? 'default' : 'pointer',
+                              opacity: estaActivo ? 0.5 : 1,
+                              transition: 'none',
+                            }}
+                            onClick={
+                              estaActivo
+                                ? undefined // Si ya está activo, no vuelve a hacer nada
+                                : async () => {
+                                  try {
+                                    const response = await axios.get(`http://localhost:4500/message/history/${chat.roomId}`);
+                                    const historial = response.data;
+
+                                    setChatsActivos(prev => [...prev, chat]);
+
+                                    setMensajesPorSala(prev => ({
+                                      ...prev,
+                                      [chat.roomId]: historial
+                                    }));
+                                  } catch (err) {
+                                    console.error('Error al cargar historial:', err);
+                                  }
+                                }
+                            }
+                          >
+                            <ListItemAvatar>
+                              <Avatar src={chat.fotoUrl} />
+                            </ListItemAvatar>
+                            <ListItemText
+                              primary={chat.destinatario}
+                              secondary={
+                                estaActivo
+                                  ? 'employee'
+                                  : 'employee'
+                              }
+                            />
+                          </ListItem>
+                          {index < chatsCerrados.length - 1 && <Divider component="li" />}
+                        </React.Fragment>
+                      );
+                    })}
+                  </List>
+                </CardContent>
+              </Card>
             </div>
 
             {/* Notificaciones */}
@@ -1705,36 +1790,6 @@ const CustomerDashboard = () => {
                   <div className="small">
                     <div className="mb-2 pb-2 border-bottom">
                       <div className="sidebar-chats" style={{ cursor: "pointer" }}>
-                        {chatsCerrados.map((chat, index) => (
-                          <div
-                            key={chat.roomId}
-                            onClick={async () => {
-                              try {
-                                // 1. Pedimos historial de mensajes desde el backend
-                                const response = await axios.get(`http://localhost:4500/message/history/${chat.roomId}`);
-                                const historial = response.data; // suponiendo que devuelve array de mensajes
-
-                                // 2. Abrimos el chat nuevamente
-                                setChatsActivos(prev => [...prev, chat]);
-
-                                // 3. Quitamos de la lista de cerrados
-                                setChatsCerrados(prev => prev.filter(c => c.roomId !== chat.roomId));
-
-                                // 4. Pasamos los mensajes al ChatBox mediante mensajesPorSala
-                                setMensajesPorSala(prev => ({
-                                  ...prev,
-                                  [chat.roomId]: historial
-                                }));
-                              } catch (err) {
-                                console.error('Error al cargar historial:', err);
-                              }
-                            }}
-                            style={{ cursor: 'pointer' }}
-                          >
-                            <img src={chat.fotoUrl} width={30} height={30} style={{ borderRadius: '50%' }} />
-                            {chat.destinatario}
-                          </div>
-                        ))}
 
                       </div>
                     </div>
@@ -1840,7 +1895,7 @@ const CustomerDashboard = () => {
                   className={`btn w-100 text-start mb-2 d-flex align-items-center ${activeSection === item.id ? 'btn-outline-light' : 'btn-outline-light'
                     }`}
                 >
-                  <Icon size={18} strokeWidth={0} className="me-3" />
+                  <Icon size={18} strokeWidth={1} className="me-3" />
                   {item.label}
                 </button>
               );
@@ -1934,6 +1989,7 @@ const CustomerDashboard = () => {
               </div>
             </div>
           </header>
+
           {/* Content Area - CENTRADO ENTRE LOS DOS SIDEBARS */}
           {renderContent()}
           {/* ChatBox */}
@@ -1955,7 +2011,11 @@ const CustomerDashboard = () => {
                   fotoUrl: chat.fotoUrl,
                 }
                 setChatsActivos(prev => prev.filter(c => c.roomId !== chat.roomId));
-                setChatsCerrados(prev => [chatCerrado, ...prev]);
+                setChatsCerrados(prev => {
+                  const yaExiste = prev.some(c => c.roomId === chat.roomId);
+                  if (yaExiste) return prev;
+                  return [...prev, chat];
+                });
 
                 axios.post(`http://localhost:4500/users/chats-close`, chatCerrado)
                   .catch(err => console.error('Error al guardar chat cerrado:', err));
@@ -1974,6 +2034,13 @@ const CustomerDashboard = () => {
 
         </div>
       </div>
+      {showPopup && (
+        <ReviewPopup
+          servicio={servicioSeleccionado}
+          onClose={() => setShowPopup(false)}
+        />
+      )}
+
     </>
   );
 }
