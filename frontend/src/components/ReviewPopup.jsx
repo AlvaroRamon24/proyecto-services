@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Star } from 'lucide-react';
+import axios from 'axios';
 
-const ReviewPopup = ({ servicio, onClose }) => {
+export default function ReviewPopup ({ servicio, onClose }){
   const [comentario, setComentario] = useState('');
-  const [calificacion, setCalificacion] = useState(0); // Cambiado a 0 para que no tenga valor inicial
+  const [calificacion, setCalificacion] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
 
   const ratingTexts = {
@@ -14,13 +15,25 @@ const ReviewPopup = ({ servicio, onClose }) => {
     5: "🤩 Muy satisfecho"
   };
 
-  const handleEnviar = () => {
+  const handleEnviar = async () => {
     if (calificacion === 0) {
       alert('Por favor selecciona una calificación');
       return;
     }
-    
     console.log('Enviando reseña:', { servicio, comentario, calificacion });
+    const newReview = {
+      comentario, 
+      calificacion, 
+      hoverRating,
+      customerId: servicio.customerId,
+      employeeId: servicio.employeeId
+      }
+    try {
+      const response = await axios.post('http://localhost:4500/solicitud/review', newReview)
+      console.log(response);
+    } catch (error) {
+      console.log('error al enviar datos al backend', error);
+    }
     // Aquí puedes enviar la reseña al backend
     onClose();
   };
@@ -181,61 +194,3 @@ const styles = {
     transition: 'all 0.2s ease'
   }
 };
-
-// Componente de ejemplo para mostrar el uso
-const App = () => {
-  const [showReview, setShowReview] = useState(true);
-  
-  const servicioEjemplo = {
-    service: "Reparación de aires acondicionados"
-  };
-
-  const handleClose = () => {
-    setShowReview(false);
-  };
-
-  return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px'
-    }}>
-      <div style={{ textAlign: 'center', color: 'white' }}>
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>
-          Demo Review Popup
-        </h1>
-        <p style={{ fontSize: '1.2rem', marginBottom: '30px' }}>
-          Sistema de calificación con estrellas dinámicas
-        </p>
-        <button 
-          onClick={() => setShowReview(true)}
-          style={{
-            padding: '15px 30px',
-            backgroundColor: 'white',
-            color: '#667eea',
-            border: 'none',
-            borderRadius: '10px',
-            fontSize: '16px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            boxShadow: '0 4px 15px rgba(255,255,255,0.3)'
-          }}
-        >
-          Mostrar Popup de Calificación
-        </button>
-      </div>
-
-      {showReview && (
-        <ReviewPopup 
-          servicio={servicioEjemplo} 
-          onClose={handleClose} 
-        />
-      )}
-    </div>
-  );
-};
-
-export default App;

@@ -2,6 +2,8 @@ import Solicitud from '../models/Solicitud.js';
 import Customer from '../models/Customer.js';
 import Employee from '../models/Employee.js';
 import Reject from '../models/Reject.js';
+import SolicitudRun from '../models/SolicitudRun.js';
+import Review from '../models/Review.js';
 
 let io;
 export const setSocketIO = (socketInstance) => {
@@ -136,3 +138,66 @@ export const getSearchUsuario = async (req, res) => {
     console.error('Error al buscar datos del usuario', error);
   }
 }
+
+export const guardarSolicitudRun = async (req, res) => {
+  try {
+    const { photoUrl, nombre, customerId, employeeId } = req.body;
+
+    const solicitudRun = await SolicitudRun.create({customerId: customerId, employeeId: employeeId, name: nombre, photo: photoUrl})
+    res.status(201).json(solicitudRun);
+  } catch (error) {
+    console.error('error al guardar data a la base de datos', error);
+  }
+}
+
+export const obtenerSolicitudRun = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const response = await SolicitudRun.find({ customerId: id})
+    console.log(response);
+    res.status(201).json(response)
+
+  } catch (error) {
+    console.error('error al obtener solicitud Run', error);
+  }
+}
+
+export const createReview = async (req, res) => {
+  try {
+    const { comentario, calificacion, hoverRating, customerId, employeeId } = req.body;
+    const response = await Review.create({ 
+      customerId: customerId,
+      employeeId: employeeId,
+      comentario: comentario,
+      calificacion: calificacion,
+      hoverRating: hoverRating
+    })
+    console.log(response);
+    res.status(201).json(response)
+
+  } catch (error) {
+    console.error('error al obtener solicitud Run', error);
+  }
+}
+
+export const getReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const reviews = await Review.find({
+      $or: [{ customerId: id }, { employeeId: id }]
+    })
+    .populate({ path: 'employeeId', model: 'Employee', select: 'name photo' })
+    .populate({ path: 'customerId', model: 'Customer', select: 'name photo' });
+
+    if (!reviews || reviews.length === 0) {
+      return res.json({ message: 'No se encontraron reviews para este usuario.' });
+    }
+
+    res.status(201).json(reviews);
+  } catch (error) {
+    console.error('Error al obtener reviews:', error);
+    res.status(500).json({ message: 'Error del servidor al obtener las reviews.' });
+  }
+};
+

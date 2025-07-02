@@ -278,10 +278,17 @@ const CustomerDashboard = () => {
 
   useEffect(() => {
     const handleServicioProceso = async ({ customerId, employeeId, roomId }) => {
+      console.log('ver', customerId, employeeId);
       const userId = id === customerId ? employeeId : customerId;
       try {
         const searchInfoUser = await axios.get(`http://localhost:4500/solicitud/usuario/${userId}`);
-        setServiceRun((prev) => [...prev, searchInfoUser.data]);
+        const newinfo = {
+          ...searchInfoUser.data,
+          customerId,
+          employeeId,
+        }
+        setServiceRun((prev) => [...prev, newinfo]);
+        await axios.post('http://localhost:4500/solicitud/guardar', newinfo);
       } catch (error) {
         console.error('Error obteniendo informacion del usuario:', error);
       }
@@ -293,6 +300,18 @@ const CustomerDashboard = () => {
       socket.off('mostrar_servicio_en_proceso', handleServicioProceso);
     };
   }, [id])
+
+  useEffect(() => {
+    const getSolicitudRun = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4500/solicitud/run/${id}`)
+        setServiceRun(response.data);
+      } catch (error) {
+        console.error('error al hacer get', error);
+      }
+    }
+    getSolicitudRun()
+  },[id])
 
   // Cerrar dropdowns al hacer click fuera
   useEffect(() => {
@@ -405,7 +424,9 @@ const CustomerDashboard = () => {
       }));
     }
   };
-
+  useEffect(() => {
+    
+  },[id])
 
   const handleSubmitUpdate = async (e) => {
     e.preventDefault();
@@ -1304,7 +1325,7 @@ const CustomerDashboard = () => {
                             }}
                           >
                             <img
-                              src={element.photoUrl}
+                              src={element.photoUrl || element.photo}
                               alt="Foto"
                               width="100"
                               height="100"

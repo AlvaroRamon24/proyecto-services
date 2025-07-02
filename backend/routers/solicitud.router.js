@@ -9,4 +9,9 @@ solicitudRouter.post('/reject', solicitudController.rejectSolicitud);
 solicitudRouter.get('/customer/:id', solicitudController.obtenerSolicitudesCliente);
 solicitudRouter.post('/delete/:solicitudId', solicitudController.deleteRejectCustomer);
 solicitudRouter.get('/usuario/:userId', solicitudController.getSearchUsuario);
+solicitudRouter.post('/guardar', solicitudController.guardarSolicitudRun);
+solicitudRouter.get('/run/:id', solicitudController.obtenerSolicitudRun);
+solicitudRouter.post('/review', solicitudController.createReview);
+solicitudRouter.get('/review-obtener/:id', solicitudController.getReview);
+
 export default solicitudRouter;

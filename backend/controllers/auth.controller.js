@@ -103,7 +103,6 @@ export const LoginAuth = async (req, res) => {
 export const forgotPassword = async (req, res) => {
   const email = req.body.email?.trim().toLowerCase();
   try {
-    // Validación básica
     if (!email) {
       return res.status(400).json({ message: "El email es obligatorio." });
     }
@@ -120,12 +119,12 @@ export const forgotPassword = async (req, res) => {
     // Generar token y guardar en usuario
     const token = crypto.randomBytes(32).toString("hex");
     user.resetToken = token;
-    user.resetTokenExpiration = Date.now() + 3600000; // 1 hora
+    user.resetTokenExpiration = Date.now() + 3600000;
     await user.save();
 
     const resetLink = `http://localhost:5173/reset-password/${token}`;
 
-    // Envío del correo
+    // Envío del correo para confirmar registro por (resend)
     try {
       const data = await resend.emails.send({
         from: '"support service" <services17@sistemadeservicios.shop>',

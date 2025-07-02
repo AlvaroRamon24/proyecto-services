@@ -1,8 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { Mail, Phone, MapPin, CalendarDays, Home, Globe, Info, Search, BriefcaseBusiness, Filter, ArrowLeft, Star } from 'lucide-react';
-import '../App.css';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 import ServiceRequestModal from './ServiceRequestModal';
 import '../App.css';
 
@@ -17,6 +18,7 @@ export default function InformationEmployee() {
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(true);
   const [servicioSeleccionado, setServicioSeleccionado] = useState('');
+  const [reviews, setReviews] = useState([]);
   const worker = {
     photo: 'https://randomuser.me/api/portraits/men/75.jpg',
     firstName: 'Juan',
@@ -86,10 +88,48 @@ export default function InformationEmployee() {
       )
     );
   };
+  const renderStars = (calificacion) => {
+    const totalStars = 5;
+    return [...Array(totalStars)].map((_, index) => (
+      <Star
+        key={index}
+        className="me-1"
+        size={18}
+        fill={index < calificacion ? "#ffc107" : "none"}
+        stroke="#ffc107"
+      />
+    ));
+  };
 
+  //crear publicacinones
   const handleComposerClick = () => {
     alert('Funcionalidad de compositor - Aquí se abriría el modal para crear publicaciones');
   };
+
+  useEffect(() => {
+    const getReviewCalification = async () => {
+      try {
+        const id = employeeId;
+        const result = await axios.get(`http://localhost:4500/solicitud/review-obtener/${id}`);
+        console.log('datos del review', result);
+
+        const data = result.data;
+
+        if (Array.isArray(data)) {
+          setReviews(data);
+        } else {
+          // Si recibimos un objeto con message (no hay reviews)
+          setReviews([]);
+        }
+
+      } catch (error) {
+        console.error('Error al obtener los Reviews', error);
+        setReviews([]); // En caso de error también evitar map sobre undefined
+      }
+    };
+    getReviewCalification();
+  }, [employeeId]);
+
 
   useEffect(() => {
     const getEmployeeData = async () => {
@@ -445,28 +485,74 @@ export default function InformationEmployee() {
           />
 
 
-          {/* Historial */}
           <div className="pt-3">
-            <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '16px', color: '#1c1e21', marginLeft: "1rem" }}>
+            <h3
+              style={{
+                fontSize: '20px',
+                fontWeight: 'bold',
+                marginBottom: '16px',
+                color: '#1c1e21',
+                marginLeft: '1rem',
+              }}
+            >
               Historial de Servicios
             </h3>
+
             <div className="row justify-content-center">
-              {worker.serviceHistory.length === 0 ? (
+              {Array.isArray(reviews) && reviews.length === 0 ? (
                 <p className="text-muted text-center">No hay servicios registrados.</p>
               ) : (
-                worker.serviceHistory.map((service, idx) => (
-                  <div key={idx} className="col-12 col-md-6 col-lg-5 mb-3">
-                    <div className="card border shadow-sm h-100 rounded-4">
-                      <div className="card-body d-flex justify-content-between align-items-start">
-                        <div>
-                          <h6 className="card-title fw-semibold mb-1">{service.name}</h6>
-                          <p className="card-text text-muted mb-0">Fecha: {service.date}</p>
-                          <h6 className="card-title fw-semibold mb-1 pt-3">Cristina Rosales</h6>
-                          <p className="card-text text-muted mb-0">{service.description}</p>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                          7
-                          <Star className="text-warning" fill="#ffc107" />
+                Array.isArray(reviews) &&
+                reviews.map((service, idx) => (
+                  <div key={idx} className="col-12 col-lg-11 mb-4">
+                    <div className="card border shadow-sm h-100 rounded-4 p-3">
+                      <div className="d-flex align-items-start gap-3">
+                        {/* Foto del cliente */}
+                        <img
+                          src={service.customerId?.photo || 'https://via.placeholder.com/60'}
+                          alt="avatar"
+                          className="rounded-circle"
+                          style={{ width: 45, height: 45, objectFit: 'cover', aspectRatio: '1 / 1' }}
+                        />
+
+                        {/* Contenido */}
+                        <div className="flex-grow-1">
+                          {/* Nombre */}
+                          <h6 className="fw-bold mb-1">{service.customerId?.name || 'Cliente'}</h6>
+
+                          {/* Fecha exacta */}
+                          <p className="text-muted mb-2" style={{ fontSize: '13px' }}>
+                            {service.date
+                              ? `Fecha: ${new Date(service.date).toLocaleDateString()}`
+                              : 'Fecha no disponible'}
+                          </p>
+
+                          {/* Estrellas + "hace X tiempo" */}
+                          <div className="d-flex align-items-center mb-2">
+                            {[...Array(5)].map((_, i) => (
+                              <svg
+                                key={i}
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                fill={i < parseInt(service.calificacion) ? "#ffc107" : "#b0b0b0"}
+                                className="bi bi-star-fill"
+                                viewBox="0 0 16 16"
+                              >
+                                <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.32-.158-.888.283-.95l4.898-.696 2.064-4.287c.197-.408.73-.408.927 0l2.064 4.287 4.898.696c.441.062.612.63.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z" />
+                              </svg>
+                            ))}
+                            <span className="ms-2 text-muted" style={{ fontSize: '13px' }}>
+                              {service.date &&
+                                formatDistanceToNow(new Date(service.date), {
+                                  addSuffix: true,
+                                  locale: es,
+                                })}
+                            </span>
+                          </div>
+
+                          {/* Comentario */}
+                          <p className="mb-0">{service.comentario}</p>
                         </div>
                       </div>
                     </div>
@@ -475,6 +561,7 @@ export default function InformationEmployee() {
               )}
             </div>
           </div>
+
 
           {/* Fotos */}
           <div style={{
@@ -797,21 +884,21 @@ export default function InformationEmployee() {
           <div className="pt-3">
             <h5 className="text-center text-secondary mb-4">Historial de Servicios Realizados</h5>
             <div className="row justify-content-center">
-              {worker.serviceHistory.length === 0 ? (
+              {reviews.length === 0 ? (
                 <p className="text-muted text-center">No hay servicios registrados.</p>
               ) : (
-                worker.serviceHistory.map((service, idx) => (
+                reviews.map((service, idx) => (
                   <div key={idx} className="col-12 col-md-6 col-lg-5 mb-3">
                     <div className="card border shadow-sm h-100 rounded-4">
                       <div className="card-body d-flex justify-content-between align-items-start">
                         <div>
-                          <h6 className="card-title fw-semibold mb-1">{service.name}</h6>
-                          <p className="card-text text-muted mb-0">Fecha: {service.date}</p>
-                          <h6 className="card-title fw-semibold mb-1 pt-3">Cristina Rosales</h6>
-                          <p className="card-text text-muted mb-0">{service.description}</p>
+                          <h6 className="card-title fw-semibold mb-1">{service.employeeId.name}</h6>
+                          <p className="card-text text-muted mb-0">Fecha: 4400</p>
+                          <h6 className="card-title fw-semibold mb-1 pt-3">{service.employeeId.name}</h6>
+                          <p className="card-text text-muted mb-0">{service.comentario}</p>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                          7
+                          {service.calificacion}
                           <Star className="text-warning" fill="#ffc107" />
                         </div>
                       </div>

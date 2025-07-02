@@ -35,6 +35,7 @@ import '../App.css';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import ChatBox from './ChatBox.jsx';
+import ReviewPopup from './ReviewPopup.jsx';
 import socket from '../socket.js'; // Asegúrate de que la ruta sea correcta
 import RejectionRequestModal from './RejectionRequestModal.jsx'
 const citiesWithDistricts = {
@@ -152,6 +153,7 @@ const EmployeeDashboard = () => {
   const [mensajesPorSala, setMensajesPorSala] = useState({});
   const [chatsCerrados, setChatsCerrados] = useState([]);
 
+  const [showPopup, setShowPopup] = useState(false);
   const [customerId, setCustomerId] = useState('');
   const [employeeId, setEmployeeId] = useState('');
   const [servicio, setServicio] = useState('');
@@ -1490,7 +1492,7 @@ const EmployeeDashboard = () => {
                 {/* Estado de trabajo rápido */}
                 <div className="d-none d-lg-flex align-items-center me-3 bg-light px-3 py-2 rounded-pill">
                   <Activity size={16} className="text-success me-2" />
-                  
+
                   {/* Estado de trabajo rápido */}
                   <span className="small fw-medium text-success">Disponible</span>
                   {chatsCerrados.map((chat, index) => (
@@ -1710,6 +1712,12 @@ const EmployeeDashboard = () => {
           }}
         />
       ))}
+      {showPopup && (
+        <ReviewPopup
+          servicio={servicioSeleccionado}
+          onClose={() => setShowPopup(false)}
+        />
+      )}
 
     </>
   );

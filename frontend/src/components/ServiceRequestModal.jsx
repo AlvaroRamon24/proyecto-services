@@ -6,7 +6,7 @@ import { LoadingButton } from '@mui/lab';
 // Lista personalizada de malas palabras en español
 const palabrasProhibidas = [
   'puta', 'puto', 'mierda', 'pendejo', 'carajo', 'conchudo', 'webon',
-  'imbecil', 'estupido', 'huevon', 'cojudo', 'maldito','perra'
+  'imbecil', 'estupido', 'huevon', 'cojudo', 'maldito', 'perra', 'tonto'
 ];
 
 // Función para limpiar el comentario
@@ -38,8 +38,20 @@ const ServiceRequestModal = ({ isOpen, onClose, employeeId, customerId, service 
   const [loading, setLoading] = useState(false);
 
   const enviarSolicitud = async () => {
-    setLoading(true);
+    if (comment.trim() === '') {
+      alert('Ingrese un comentario');
+      return;
+    }
+    if (comment.trim().length < 5) {
+      alert('El comentario debe tener al menos 5 caracteres');
+      return;
+    }
 
+    if (comment.trim().length > 40) {
+      alert('El comentario no puede tener más de 40 caracteres');
+      return;
+    }
+    setLoading(true);
     const comentarioFiltrado = limpiarComentario(comment);
 
     const payload = {
