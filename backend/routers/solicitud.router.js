@@ -11,6 +11,7 @@ solicitudRouter.post('/delete/:solicitudId', solicitudController.deleteRejectCus
 solicitudRouter.get('/usuario/:userId', solicitudController.getSearchUsuario);
 solicitudRouter.post('/guardar-customer', solicitudController.guardarSolicitudCustomerRun);
 solicitudRouter.post('/guardar-employee', solicitudController.guardarSolicitudEmployeeRun);
+solicitudRouter.put('/update/:solicitudId', solicitudController.updateSolicitud);
 solicitudRouter.get('/customer/run/:id', solicitudController.obtenerSolicitudCustomerRun);
 solicitudRouter.get('/employee/run/:id', solicitudController.obtenerSolicitudEmployeeRun);
 solicitudRouter.post('/review', solicitudController.createReview);

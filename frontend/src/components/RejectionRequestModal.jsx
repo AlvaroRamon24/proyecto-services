@@ -2,7 +2,8 @@
 import { useState } from 'react';
 import axios from 'axios';
 
-const RejectionRequestModal = ({ isOpen, onClose, employeeId, customerId, service, serviceId }) => {
+const RejectionRequestModal = ({ isOpen, onClose, employeeId, 
+  customerId, service, serviceId, setSolicitudes }) => {
   const [comment, setComment] = useState('');
 
   const enviarSolicitud = async () => {
@@ -30,6 +31,7 @@ const RejectionRequestModal = ({ isOpen, onClose, employeeId, customerId, servic
 
     try {
       await axios.post('http://localhost:4500/solicitud/reject/', payload);
+      setSolicitudes(prev => prev.filter(el => el._id !== serviceId));
       onClose(); // Cierra el modal
     } catch (error) {
       console.error('Error al enviar solicitud:', error);

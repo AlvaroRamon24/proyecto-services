@@ -177,7 +177,6 @@ const CustomerDashboard = () => {
     socket.on('reject_solicitud', (nueva) => {
       setReject(prev => [nueva, ...prev]);
     });
-    // Cleanup al desmontar
     return () => {
       socket.off('reject_solicitud');
     };
@@ -1276,7 +1275,7 @@ const CustomerDashboard = () => {
                             />
                           </div>
                           <div className="flex-grow-1 d-flex flex-column justify-content-center">
-                            <p className="fw-bold mb-1">Cliente: {element.nombre}</p>
+                            <p className="fw-bold mb-1">Trabajador: {element.name}</p>
                             <p className="text-muted mb-0">Servicio en progreso con este usuario.</p>
                           </div>
                         </div>

@@ -475,17 +475,6 @@ export default function InformationEmployee() {
           </div>
 
 
-
-          {/* Modal para solicitar servicio */}
-          <ServiceRequestModal
-            isOpen={modalOpen}
-            onClose={() => setModalOpen(false)}
-            employeeId={employeeId}
-            customerId={id}
-            service={servicioSeleccionado}
-          />
-
-
           <div className="pt-3">
             <h3
               style={{

@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { Star } from 'lucide-react';
+import Avatar from '@mui/material/Avatar';
 import axios from 'axios';
 
-export default function ReviewPopup ({ servicio, onClose, setServiceRun, serviceRun, userType }){
+export default function ReviewPopup({ servicio, onClose, setServiceRun, serviceRun, userType }) {
   const [comentario, setComentario] = useState('');
   const [calificacion, setCalificacion] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
 
   const ratingTexts = {
     1: "😞 Muy insatisfecho",
-    2: "😕 Insatisfecho", 
+    2: "😕 Insatisfecho",
     3: "😐 Regular",
     4: "😊 Satisfecho",
     5: "🤩 Muy satisfecho"
@@ -26,23 +27,23 @@ export default function ReviewPopup ({ servicio, onClose, setServiceRun, service
     const id = servicio._id;
     const newReview = {
       userType,
-      comentario, 
-      calificacion, 
+      comentario,
+      calificacion,
       hoverRating,
       customerId: servicio.customerId,
       employeeId: servicio.employeeId
-      }
+    }
     try {
       const response = await axios.post('http://localhost:4500/solicitud/review', newReview)
-      if(response.status === 201) {
-        if(!servicio.isActive) {
-          const updateService = 
-          userType === 'customer' 
-          ? `http://localhost:4500/solicitud/update-solicitudCustomerRun/${id}`
-          : `http://localhost:4500/solicitud/update-solicitudEmployeeRun/${id}`
+      if (response.status === 201) {
+        if (!servicio.isActive) {
+          const updateService =
+            userType === 'customer'
+              ? `http://localhost:4500/solicitud/update-solicitudCustomerRun/${id}`
+              : `http://localhost:4500/solicitud/update-solicitudEmployeeRun/${id}`
 
-         const result =  await axios.put(updateService)
-         console.log(result);
+          const result = await axios.put(updateService)
+          console.log(result);
         }
       }
       setServiceRun(serviceRun.filter(element => element._id !== servicio._id));
@@ -58,8 +59,14 @@ export default function ReviewPopup ({ servicio, onClose, setServiceRun, service
   return (
     <div style={styles.overlay}>
       <div style={styles.modal}>
-        <h4 style={styles.title}>Reseña para el servicio: {servicio?.service}</h4>
-        
+        <h4 style={styles.title}>Reseña para: {servicio?.name}</h4>
+        <div style={styles.avatar}>
+          <Avatar
+            alt={servicio?.name}
+            src={servicio?.photo}
+            sx={{ width: 56, height: 56 }}
+          />
+        </div>
         {/* Sistema de estrellas dinámico */}
         <div style={styles.ratingSection}>
           <label style={styles.ratingLabel}>¿Cómo calificarías el servicio?</label>
@@ -94,13 +101,13 @@ export default function ReviewPopup ({ servicio, onClose, setServiceRun, service
           rows={4}
           style={styles.textarea}
         />
-        
+
         <div style={styles.buttonContainer}>
           <button onClick={onClose} style={styles.cancelBtn}>
             Cancelar
           </button>
-          <button 
-            onClick={handleEnviar} 
+          <button
+            onClick={handleEnviar}
             style={{
               ...styles.sendBtn,
               backgroundColor: calificacion === 0 ? '#ccc' : '#007bff',
@@ -121,7 +128,7 @@ export default function ReviewPopup ({ servicio, onClose, setServiceRun, service
 const styles = {
   overlay: {
     position: 'fixed',
-    top: 0, 
+    top: 0,
     left: 0,
     width: '100vw',
     height: '100vh',
@@ -170,11 +177,11 @@ const styles = {
     fontWeight: '500'
   },
   textarea: {
-    width: '100%', 
-    padding: '15px', 
-    marginTop: '10px', 
+    width: '100%',
+    padding: '15px',
+    marginTop: '10px',
     borderRadius: '8px',
-    border: '2px solid #e1e5e9',
+    border: '2px solid rgb(196, 196, 217)',
     fontSize: '14px',
     fontFamily: 'inherit',
     resize: 'vertical',
@@ -182,8 +189,8 @@ const styles = {
     transition: 'border-color 0.3s ease'
   },
   buttonContainer: {
-    marginTop: '25px', 
-    display: 'flex', 
+    marginTop: '25px',
+    display: 'flex',
     justifyContent: 'flex-end',
     gap: '10px'
   },
@@ -208,5 +215,10 @@ const styles = {
     fontSize: '14px',
     fontWeight: '600',
     transition: 'all 0.2s ease'
+  },
+  avatar: {
+    display: 'flex',
+    justifyContent: 'center',
+    marginBottom: '1rem'
   }
 };

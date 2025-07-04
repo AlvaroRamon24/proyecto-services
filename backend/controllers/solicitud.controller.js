@@ -36,7 +36,7 @@ export const crearSolicitud = async (req, res) => {
 export const obtenerSolicitudesEmpleado = async (req, res) => {
   try {
     const { id } = req.params;
-    const solicitudes = await Solicitud.find({ employeeId: id }).sort({ fecha: -1 });
+    const solicitudes = await Solicitud.find({ employeeId: id, status: 'pending' }).sort({ fecha: -1 });
 
     // Obtener nombres de clientes
     const solicitudesConNombre = await Promise.all(
@@ -60,34 +60,44 @@ export const obtenerSolicitudesEmpleado = async (req, res) => {
 export const rejectSolicitud = async (req, res) => {
   try {
     const { customerId, employeeId, service, comment, serviceId } = req.body;
-    const nueva = await Reject.create({ customerId, employeeId, service, comment });
 
+    // 1. Guardar el rechazo en la colección
+    await Reject.create({ customerId, employeeId, service, comment });
+    const empleado = await Employee.findById(employeeId).lean();
+    const nueva = {
+      customerId,
+      employeeId,
+      service,
+      comment,
+      employeeFoto: empleado?.photo || null,
+      employeeNombre: empleado?.name || 'Desconocido',
+    }
+    // 2. Enviar al cliente por sockets
     const socketId = global.connectedCustomers[customerId];
     if (socketId) {
-      const trabajador = await Employee.findById(employeeId).lean();
-      const solicitudConNombre = {
-        ...nueva.toObject(),
-        employeeNombre: trabajador?.name || 'Desconocido',
-        employeeFoto: trabajador?.photo || null,
-        employeeStar: trabajador?.qualifications || 0
-      };
-      io.to(socketId).emit('reject_solicitud', solicitudConNombre);
-    }
-    // 3. Eliminar la solicitud de la base de datos
-    const deleted = await Solicitud.findByIdAndDelete(serviceId);
-    // 4. Notificar al empleado solo si se eliminó exitosamente
-    if (deleted) {
-      const employeeSocket = global.connectedEmployees[employeeId];
-      if (employeeSocket) {
-        io.to(employeeSocket).emit('solicitud_eliminada', { serviceId });
-      }
+      io.to(socketId).emit('reject_solicitud', nueva);
     }
 
+    // 3. Modificar la solicitud a status: 'rechazado'
+    const solicitudUpdate = await Solicitud.findByIdAndUpdate(serviceId, { status: 'rechazado' });
+    console.log(solicitudUpdate);
+
     res.status(201).json(nueva);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error('Error al intentar crear o modificar!!!', error);
+    res.status(500).json({ message: 'Error al rechazar la solicitud' });
   }
 };
+
+export const updateSolicitud = async (req, res) => {
+  try {
+    const { solicitudId } = req.params;
+    const response = await Solicitud.findByIdAndUpdate(solicitudId, { status: 'aceptada' })
+    res.status(201).json(response)
+  } catch (error) {
+    console.error('Error al modificar solicitud status a aceptado', error);
+  }
+}
 
 export const obtenerSolicitudesCliente = async (req, res) => {
   try {

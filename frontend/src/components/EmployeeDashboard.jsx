@@ -177,7 +177,6 @@ const EmployeeDashboard = () => {
     qualifications: 0,
   });
 
-  // Pruebas enviar mensaje de rechaso
   // Manejar el cambio de ciudad
   const handleCityChange = (e) => {
     setSelectedCity(e.target.value);
@@ -378,24 +377,21 @@ const EmployeeDashboard = () => {
     }
   }, [settingsForm.services]);
 
-  // Conectar al websocket
+  // Conectar al websocket y registramos el Id del employee y escuchamos el socket nueva_solicitud
   useEffect(() => {
-    // Conexión inicial: registramos el ID del trabajador
     socket.emit('register_employee', id);
-    // Obtener solicitudes pasadas desde la API
     axios.get(`http://localhost:4500/solicitud/employee/${id}`)
       .then(res => setSolicitudes(res.data))
       .catch(console.error);
-    // Escuchar solicitudes nuevas en tiempo real
     socket.on('nueva_solicitud', (nueva) => {
       setSolicitudes(prev => {
-        const yaExiste = prev.some(s => s._id === nueva._id);
+        const yaExiste = prev.some(el => el._id === nueva._id);
         if (yaExiste) return prev;
         return [nueva, ...prev];
       });
     });
     socket.on('solicitud_eliminada', ({ serviceId }) => {
-      setSolicitudes(prev => prev.filter(s => s._id !== serviceId))
+      setSolicitudes(prev => prev.filter(el => el._id !== serviceId))
     })
     return () => {
       socket.off('nueva_solicitud');
@@ -405,8 +401,15 @@ const EmployeeDashboard = () => {
 
 
   // Cuando employee acepta la solicitud emite y se une al chat privado(join_chat)
-  const aceptarSolicitud = (customerId) => {
+  const aceptarSolicitud =  async (customerId, solicitudId) => {
     socket.emit('join_chat', { customerId, employeeId: id, isInitiator: true });
+    try {
+      const response = await axios.put(`http://localhost:4500/solicitud/update/${solicitudId}`)
+      setSolicitudes(prev => prev.filter(el => el._id !== solicitudId)); 
+      console.log(response.data);
+    } catch (error) {
+      console.error('Error al modificar Solicitud', error);
+    }
   };
 
   useEffect(() => {
@@ -1060,7 +1063,7 @@ const EmployeeDashboard = () => {
                                       </div>
                                       <div className="d-flex justify-content-evenly">
                                         <button className="btn btn-outline-primary btn-sm rounded-pill px-4"
-                                          onClick={() => aceptarSolicitud(e.customerId)}>
+                                          onClick={() => aceptarSolicitud(e.customerId, e._id)}>
                                           Aceptar
                                         </button>
                                         <button className="btn btn-outline-danger btn-sm rounded-pill px-4"
@@ -1133,7 +1136,7 @@ const EmployeeDashboard = () => {
                                       }}
                                     >
                                       <img
-                                        src={element.photoUrl}
+                                        src={element.photo}
                                         alt="Foto"
                                         width="100"
                                         height="100"
@@ -1141,7 +1144,7 @@ const EmployeeDashboard = () => {
                                       />
                                     </div>
                                     <div className="flex-grow-1 d-flex flex-column justify-content-center">
-                                      <p className="fw-bold mb-1">Cliente: {element.nombre}</p>
+                                      <p className="fw-bold mb-1">Cliente: {element.name}</p>
                                       <p className="text-muted mb-0">Servicio en progreso con este usuario.</p>
                                     </div>
                                   </div>
@@ -1668,6 +1671,7 @@ const EmployeeDashboard = () => {
         customerId={customerId}
         service={servicio}
         serviceId={serviceId}
+        setSolicitudes={setSolicitudes}
       />
       {/* chatbox */}
       {chatsActivos.map((chat, index) => (
