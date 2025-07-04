@@ -2,7 +2,8 @@ import Solicitud from '../models/Solicitud.js';
 import Customer from '../models/Customer.js';
 import Employee from '../models/Employee.js';
 import Reject from '../models/Reject.js';
-import SolicitudRun from '../models/SolicitudRun.js';
+import SolicitudRunCustomer from '../models/SolicitudRunCustomer.js';
+import SolicitudRunEmployee from '../models/SolicitudRunEmployee.js';
 import Review from '../models/Review.js';
 
 let io;
@@ -55,7 +56,6 @@ export const obtenerSolicitudesEmpleado = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 export const rejectSolicitud = async (req, res) => {
   try {
@@ -139,21 +139,44 @@ export const getSearchUsuario = async (req, res) => {
   }
 }
 
-export const guardarSolicitudRun = async (req, res) => {
+export const guardarSolicitudCustomerRun = async (req, res) => {
   try {
     const { photoUrl, nombre, customerId, employeeId } = req.body;
 
-    const solicitudRun = await SolicitudRun.create({customerId: customerId, employeeId: employeeId, name: nombre, photo: photoUrl})
+    const solicitudRun = await SolicitudRunCustomer.create({customerId: customerId, employeeId: employeeId, name: nombre, photo: photoUrl})
     res.status(201).json(solicitudRun);
   } catch (error) {
     console.error('error al guardar data a la base de datos', error);
   }
 }
 
-export const obtenerSolicitudRun = async (req, res) => {
+export const guardarSolicitudEmployeeRun = async (req, res) => {
+  try {
+    const { photoUrl, nombre, customerId, employeeId } = req.body;
+
+    const solicitudRun = await SolicitudRunEmployee.create({customerId: customerId, employeeId: employeeId, name: nombre, photo: photoUrl})
+    res.status(201).json(solicitudRun);
+  } catch (error) {
+    console.error('error al guardar data a la base de datos', error);
+  }
+}
+
+export const obtenerSolicitudCustomerRun = async (req, res) => {
   try {
     const { id } = req.params;
-    const response = await SolicitudRun.find({ customerId: id})
+    const response = await SolicitudRunCustomer.find({ customerId: id, isActive: false })
+    console.log(response);
+    res.status(201).json(response)
+
+  } catch (error) {
+    console.error('error al obtener solicitud Run', error);
+  }
+}
+
+export const obtenerSolicitudEmployeeRun = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const response = await SolicitudRunEmployee.find({ employeeId: id, isActive: false })
     console.log(response);
     res.status(201).json(response)
 
@@ -164,13 +187,14 @@ export const obtenerSolicitudRun = async (req, res) => {
 
 export const createReview = async (req, res) => {
   try {
-    const { comentario, calificacion, hoverRating, customerId, employeeId } = req.body;
+    const { comentario, calificacion, hoverRating, customerId, employeeId, userType } = req.body;
     const response = await Review.create({ 
       customerId: customerId,
       employeeId: employeeId,
       comentario: comentario,
       calificacion: calificacion,
-      hoverRating: hoverRating
+      hoverRating: hoverRating,
+      autor: userType
     })
     console.log(response);
     res.status(201).json(response)
@@ -182,11 +206,17 @@ export const createReview = async (req, res) => {
 
 export const getReview = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id, userType } = req.params;
+    let filter = {}
 
-    const reviews = await Review.find({
-      $or: [{ customerId: id }, { employeeId: id }]
-    })
+    if(userType === 'customer') {
+      filter = { customerId: id, autor: 'employee' }
+    } else if(userType === 'employee') {
+      filter = { employeeId: id, autor: 'customer' }
+    } else {
+      return res.status(404).json({ message: 'usuario no valido' })
+    }
+    const reviews = await Review.find(filter)
     .populate({ path: 'employeeId', model: 'Employee', select: 'name photo' })
     .populate({ path: 'customerId', model: 'Customer', select: 'name photo' });
 
@@ -200,4 +230,34 @@ export const getReview = async (req, res) => {
     res.status(500).json({ message: 'Error del servidor al obtener las reviews.' });
   }
 };
+
+export const updateSolicitudCustomerRunId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const response = await SolicitudRunCustomer.findByIdAndUpdate(id, { isActive: true }, { new: true })
+    
+    if(!response) {
+      res.status(404).json({message: 'ServiceRunCustomer no encontrado'});
+    }
+
+    res.status(201).json(response);
+  } catch (error) {
+    console.error('Error al modificar el solicitud run Customer seleccionado', error);
+  }
+}
+
+export const updateSolicitudEmployeeRunId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const response = await SolicitudRunEmployee.findByIdAndUpdate(id, { isActive: true }, { new: true })
+    
+    if(!response) {
+      res.status(404).json({message: 'ServiceRunEmployee no encontrado'});
+    }
+
+    res.status(201).json(response);
+  } catch (error) {
+    console.error('Error al modificar el solicitud run Employee seleccionado', error);
+  }
+}
 

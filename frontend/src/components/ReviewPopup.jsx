@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Star } from 'lucide-react';
 import axios from 'axios';
 
-export default function ReviewPopup ({ servicio, onClose }){
+export default function ReviewPopup ({ servicio, onClose, setServiceRun, serviceRun, userType }){
   const [comentario, setComentario] = useState('');
   const [calificacion, setCalificacion] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -15,13 +15,17 @@ export default function ReviewPopup ({ servicio, onClose }){
     5: "🤩 Muy satisfecho"
   };
 
+  //funcion para hacer peticion post y guardar la reseña(calificacion)
   const handleEnviar = async () => {
     if (calificacion === 0) {
       alert('Por favor selecciona una calificación');
       return;
     }
     console.log('Enviando reseña:', { servicio, comentario, calificacion });
+    console.log('servicioId: ', servicio)
+    const id = servicio._id;
     const newReview = {
+      userType,
       comentario, 
       calificacion, 
       hoverRating,
@@ -30,12 +34,23 @@ export default function ReviewPopup ({ servicio, onClose }){
       }
     try {
       const response = await axios.post('http://localhost:4500/solicitud/review', newReview)
-      console.log(response);
+      if(response.status === 201) {
+        if(!servicio.isActive) {
+          const updateService = 
+          userType === 'customer' 
+          ? `http://localhost:4500/solicitud/update-solicitudCustomerRun/${id}`
+          : `http://localhost:4500/solicitud/update-solicitudEmployeeRun/${id}`
+
+         const result =  await axios.put(updateService)
+         console.log(result);
+        }
+      }
+      setServiceRun(serviceRun.filter(element => element._id !== servicio._id));
     } catch (error) {
       console.log('error al enviar datos al backend', error);
+    } finally {
+      onClose();
     }
-    // Aquí puedes enviar la reseña al backend
-    onClose();
   };
 
   const displayRating = hoverRating || calificacion;
@@ -102,6 +117,7 @@ export default function ReviewPopup ({ servicio, onClose }){
   );
 };
 
+//estilos css para el pop up de reseña(calificación)
 const styles = {
   overlay: {
     position: 'fixed',

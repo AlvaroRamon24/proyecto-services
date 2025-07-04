@@ -152,7 +152,7 @@ const EmployeeDashboard = () => {
   const [chatsActivos, setChatsActivos] = useState([]);
   const [mensajesPorSala, setMensajesPorSala] = useState({});
   const [chatsCerrados, setChatsCerrados] = useState([]);
-
+  const [servicioSeleccionado, setServicioSeleccionado] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [customerId, setCustomerId] = useState('');
   const [employeeId, setEmployeeId] = useState('');
@@ -191,8 +191,8 @@ const EmployeeDashboard = () => {
 
 
   //
-  // Maneja la solicitud de servicio al hacer clic en el botón "Pedir Servicio"
-  const handlePedirServicio = (customerId, employeeId, service, serviceId) => {
+  // Maneja la solicitud de servicio al hacer clic en el botón "Rechazar Servicio"
+  const handleRechazarServicio = (customerId, employeeId, service, serviceId) => {
     setCustomerId(customerId);
     setEmployeeId(employeeId);
     setServicio(service);
@@ -334,20 +334,7 @@ const EmployeeDashboard = () => {
   const addService = () => {
     setServices([...services, { name: "", description: "" }]);
   };
-  /*
-    const addDistrict = () => {
-      const district = districtInput.trim();
-  
-      if (district && !settingsForm.coverage.includes(district)) {
-        setSettingsForm((prev) => ({
-          ...prev,
-          coverage: [...prev.coverage, district]
-        }));
-        setDistrictInput(""); // limpiar input
-      }
-    };
-  */
-  //pruebas 
+
   // Agregar distrito
   const addDistrict = () => {
     if (selectedDistrict && !settingsForm.coverage.includes(selectedDistrict)) {
@@ -364,15 +351,8 @@ const EmployeeDashboard = () => {
     updated.splice(index, 1);
     setSettingsForm((prev) => ({ ...prev, coverage: updated }));
   };
-  //
-  /*
-    const removeDistrict = (index) => {
-      setSettingsForm((prev) => ({
-        ...prev,
-        coverage: prev.coverage.filter((_, i) => i !== index)
-      }));
-    };
-  */
+ 
+  //Guardamos la foto seleccionada en editar perfil
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -398,7 +378,7 @@ const EmployeeDashboard = () => {
     }
   }, [settingsForm.services]);
 
-  // ----conectar al websocket----
+  // Conectar al websocket
   useEffect(() => {
     // Conexión inicial: registramos el ID del trabajador
     socket.emit('register_employee', id);
@@ -410,11 +390,10 @@ const EmployeeDashboard = () => {
     socket.on('nueva_solicitud', (nueva) => {
       setSolicitudes(prev => {
         const yaExiste = prev.some(s => s._id === nueva._id);
-        if (yaExiste) return prev; // No agregues si ya está
+        if (yaExiste) return prev;
         return [nueva, ...prev];
       });
     });
-
     socket.on('solicitud_eliminada', ({ serviceId }) => {
       setSolicitudes(prev => prev.filter(s => s._id !== serviceId))
     })
@@ -425,11 +404,9 @@ const EmployeeDashboard = () => {
   }, [id]);
 
 
-  // ------Cuando acepta una solicitud------
+  // Cuando employee acepta la solicitud emite y se une al chat privado(join_chat)
   const aceptarSolicitud = (customerId) => {
     socket.emit('join_chat', { customerId, employeeId: id, isInitiator: true });
-    // NO poner setRoomId ni setChatVisible aquí
-    // Esperar el evento 'chat_iniciado'
   };
 
   useEffect(() => {
@@ -438,7 +415,6 @@ const EmployeeDashboard = () => {
       const userId = id === customerId ? employeeId : customerId;
 
       try {
-        // Obtener datos del otro usuario
         const res = await axios.get(`http://localhost:4500/solicitud/usuario/${userId}`);
         const nombre = res.data.nombre;
         const fotoUrl = res.data.photoUrl || 'https://i.pravatar.cc/150?img=47';
@@ -460,12 +436,7 @@ const EmployeeDashboard = () => {
       } catch (error) {
         console.error('Error obteniendo nombre del otro usuario:', error);
       }
-
-      // Unirse a la sala solo si aún no lo hiciste
-      //socket.emit('join_chat', { customerId, employeeId });
-      //prueba---termina
     };
-
     socket.on('chat_iniciado', handleChatIniciado);
 
     return () => {
@@ -478,7 +449,13 @@ const EmployeeDashboard = () => {
       try {
         const userId = id === customerId ? employeeId : customerId;
         const searchInfoUser = await axios.get(`http://localhost:4500/solicitud/usuario/${userId}`);
-        setServiceRun((prev) => [...prev, searchInfoUser.data]);
+        const newinfo = {
+          ...searchInfoUser.data,
+          customerId,
+          employeeId
+        }
+        const response = await axios.post('http://localhost:4500/solicitud/guardar-employee', newinfo);
+        setServiceRun((prev) => [...prev, response.data]);
       } catch (error) {
         console.error('Error obteniendo informacion del servicio en curso:', error);
       }
@@ -490,6 +467,19 @@ const EmployeeDashboard = () => {
       socket.off('mostrar_servicio_en_proceso', handleServicioEnCurso);
     };
   }, [id]);
+
+   //Apena renderiza la pagina hace peticion para traer todas las solicitudes con ese id pendiente
+   useEffect(() => {
+    const getSolicitudRun = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4500/solicitud/employee/run/${id}`)
+        setServiceRun(response.data);
+      } catch (error) {
+        console.error('error al hacer get', error);
+      }
+    }
+    getSolicitudRun()
+  },[id])
 
   // Renderizar el contenido según la sección activa
   const renderMainContent = () => {
@@ -1074,7 +1064,7 @@ const EmployeeDashboard = () => {
                                           Aceptar
                                         </button>
                                         <button className="btn btn-outline-danger btn-sm rounded-pill px-4"
-                                          onClick={() => handlePedirServicio(e.customerId, e.employeeId, e.service, e._id)}>
+                                          onClick={() => handleRechazarServicio(e.customerId, e.employeeId, e.service, e._id)}>
                                           Rechazar
                                         </button>
                                       </div>
@@ -1118,7 +1108,7 @@ const EmployeeDashboard = () => {
                             <div className="d-flex flex-wrap gap-4 justify-content-start">
                               {serviceRun.map((element, index) => (
                                 <div
-                                  key={index}
+                                  key={element._id}
                                   className="card border-0 shadow-sm"
                                   style={{
                                     borderRadius: '15px',
@@ -1157,7 +1147,13 @@ const EmployeeDashboard = () => {
                                   </div>
 
                                   <div className="card-footer bg-transparent text-center pb-3">
-                                    <button className="btn btn-primary btn-sm rounded-pill px-4">
+                                    <button className="btn btn-primary btn-sm rounded-pill px-4"
+                                    onClick={() => {
+                                      setServicioSeleccionado(element)
+                                      setShowPopup(true);
+                                    }}
+                                    
+                                    >
                                       Finalizar Servicio
                                     </button>
                                   </div>
@@ -1169,9 +1165,6 @@ const EmployeeDashboard = () => {
                       </div>
                     </div>
                   )}
-
-
-
                   <style>{`
   .card-hover {
     transition: all 0.3s ease;
@@ -1242,7 +1235,7 @@ const EmployeeDashboard = () => {
       padding: 0.75rem 1rem 1rem 1rem;
     }
   }
-`}</style>
+                `}</style>
                 </div>
               </div>
             </div>
@@ -1320,8 +1313,6 @@ const EmployeeDashboard = () => {
           box-shadow: 0 0 0 0.25rem rgba(76, 100, 206, 0.15);
         }
       `}</style>
-
-
 
       <div className="min-h-screen bg-light">
         {/* Sidebar Desktop */}
@@ -1497,7 +1488,7 @@ const EmployeeDashboard = () => {
                   <span className="small fw-medium text-success">Disponible</span>
                   {chatsCerrados.map((chat, index) => (
                     <div
-                      key={chat.roomId}
+                      key={`${chat.roomId}_${index}`}
                       onClick={async () => {
                         try {
                           // 1. Pedimos historial de mensajes desde el backend
@@ -1716,6 +1707,9 @@ const EmployeeDashboard = () => {
         <ReviewPopup
           servicio={servicioSeleccionado}
           onClose={() => setShowPopup(false)}
+          serviceRun={serviceRun}
+          setServiceRun={setServiceRun}
+          userType='employee'
         />
       )}
 

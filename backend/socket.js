@@ -44,7 +44,7 @@ export function registerSocketEvents(io) {
         });
         
         socket.on('servicio_en_curso', ({ customerId, employeeId, roomId }) => {
-            console.log("Backend recibió servicio_en_curso:", { customerId, employeeId, roomId });
+            console.log("Backend recibió servicio en roceso:", { customerId, employeeId, roomId });
             io.to(roomId).emit('mostrar_servicio_en_proceso', { customerId, employeeId, roomId });
         })
         //disconet socket

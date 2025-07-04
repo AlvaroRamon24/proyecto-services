@@ -110,7 +110,8 @@ export default function InformationEmployee() {
     const getReviewCalification = async () => {
       try {
         const id = employeeId;
-        const result = await axios.get(`http://localhost:4500/solicitud/review-obtener/${id}`);
+        const userType = 'employee';
+        const result = await axios.get(`http://localhost:4500/solicitud/user/${userType}/review-obtener/${id}`);
         console.log('datos del review', result);
 
         const data = result.data;

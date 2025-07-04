@@ -128,63 +128,6 @@ const CustomerDashboard = () => {
     photo: "",
   });
 
-  // Datos simulados
-  const stats = [
-    {
-      title: 'Ingresos Totales',
-      value: '$45,231',
-      change: '+12.5%',
-      trend: 'up',
-      icon: DollarSign,
-      color: 'success'
-    },
-    {
-      title: 'Nuevos Clientes',
-      value: '2,340',
-      change: '+8.2%',
-      trend: 'up',
-      icon: Users,
-      color: 'primary'
-    },
-    {
-      title: 'Pedidos',
-      value: '1,256',
-      change: '-2.4%',
-      trend: 'down',
-      icon: ShoppingBag,
-      color: 'warning'
-    },
-    {
-      title: 'Tasa Conversión',
-      value: '3.24%',
-      change: '+1.8%',
-      trend: 'up',
-      icon: TrendingUp,
-      color: 'info'
-    }
-  ];
-
-  const notifications = [
-    { id: 1, title: 'Nuevo pedido recibido', message: 'Pedido #1234 por $150.00', time: '5 min', unread: true },
-    { id: 2, title: 'Pago confirmado', message: 'Pago de cliente Juan Pérez', time: '15 min', unread: true },
-    { id: 3, title: 'Stock bajo', message: 'Producto XYZ tiene pocas unidades', time: '1 hora', unread: false },
-    { id: 4, title: 'Nuevo mensaje', message: 'Consulta de cliente María García', time: '2 horas', unread: true },
-    { id: 5, title: 'Reporte listo', message: 'Reporte mensual disponible', time: '1 día', unread: false }
-  ];
-
-  const recentActivity = [
-    { id: 1, action: 'Nuevo pedido recibido', time: 'Hace 5 min', type: 'order' },
-    { id: 2, action: 'Cliente registrado', time: 'Hace 12 min', type: 'user' },
-    { id: 3, action: 'Pago procesado', time: 'Hace 25 min', type: 'payment' },
-    { id: 4, action: 'Producto actualizado', time: 'Hace 1 hora', type: 'product' },
-    { id: 5, action: 'Reporte generado', time: 'Hace 2 horas', type: 'report' }
-  ];
-
-  const cliente = {
-    nombre: 'María López',
-    avatar: 'https://i.pravatar.cc/150?img=47',
-  };
-
   const recomendados = [
     { id: 1, nombre: 'Juan Pérez', servicio: 'Plomería', rating: 4.9 },
     { id: 2, nombre: 'Ana Torres', servicio: 'Limpieza', rating: 4.8 },
@@ -240,8 +183,7 @@ const CustomerDashboard = () => {
     };
   }, [id]);
 
-  //----chat prueba
-  // 1) Efecto que oye chat_iniciado y muestra el chat
+  //Escucha chat_iniciado del socket(backend) y muestra el chat
   useEffect(() => {
     const handleChatIniciado = async ({ roomId, customerId, employeeId }) => {
       socket.emit('join_chat', { customerId, employeeId, isInitiator: false });
@@ -287,8 +229,8 @@ const CustomerDashboard = () => {
           customerId,
           employeeId,
         }
-        setServiceRun((prev) => [...prev, newinfo]);
-        await axios.post('http://localhost:4500/solicitud/guardar', newinfo);
+        const response = await axios.post('http://localhost:4500/solicitud/guardar-customer', newinfo);
+        setServiceRun((prev) => [...prev, response.data]);
       } catch (error) {
         console.error('Error obteniendo informacion del usuario:', error);
       }
@@ -301,10 +243,11 @@ const CustomerDashboard = () => {
     };
   }, [id])
 
+  //Apena renderiza la pagina hace peticion para traer todas las solicitudes con ese id pendiente
   useEffect(() => {
     const getSolicitudRun = async () => {
       try {
-        const response = await axios.get(`http://localhost:4500/solicitud/run/${id}`)
+        const response = await axios.get(`http://localhost:4500/solicitud/customer/run/${id}`)
         setServiceRun(response.data);
       } catch (error) {
         console.error('error al hacer get', error);
@@ -1202,7 +1145,7 @@ const CustomerDashboard = () => {
                     </div>
                     <div>
                       <h3 className="mb-0 text-white">Solicitudes Rechazadas</h3>
-                      <p className="text-muted mb-0">Total: {reject.length} solicitudes</p>
+                      <p className="text-muted mb-0">Total: {reject.length > 1? `${reject.length} solicitudes`: `${reject.length} solicitud`}</p>
                     </div>
                   </div>
                   <div className="row g-4">
@@ -1284,15 +1227,15 @@ const CustomerDashboard = () => {
                 }}
               >
                 <div className="card-body">
-                  <div className="d-flex align-items-center mb-4">
+                  <div className="d-flex align-items-center mb-4" style={{color:'#e4e4e4'}}>
                     <div className="rounded-3 p-3 me-3" style={{ background: "#2196F3" }}>
                       <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
                         <path d="M9 2a7 7 0 0 1 6.93 6H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h4.07A7 7 0 0 1 9 2zM4 10v9h16v-9H4zm5-6a5 5 0 0 0 0 10a5 5 0 0 0 0-10z" />
                       </svg>
                     </div>
                     <div>
-                      <h3 className="mb-0">Servicios en Curso</h3>
-                      <p className="text-muted mb-0">Tienes {serviceRun.length} servicio(s) activo(s)</p>
+                      <h3 className="mb-0">{serviceRun.length > 1 ?`Servicios en curso`: `Servicio en curso`}</h3>
+                      <p className="mb-0">Tienes {serviceRun.length > 1? `${serviceRun.length} servicios activos`: `${serviceRun.length} servicio activo`}</p>
                     </div>
                   </div>
 
@@ -2059,6 +2002,9 @@ const CustomerDashboard = () => {
         <ReviewPopup
           servicio={servicioSeleccionado}
           onClose={() => setShowPopup(false)}
+          setServiceRun={setServiceRun}
+          serviceRun={serviceRun}
+          userType="customer"
         />
       )}
 

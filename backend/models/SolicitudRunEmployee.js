@@ -1,6 +1,6 @@
 import { Schema, model} from 'mongoose'
 
-const SolicitudRunSchema = new Schema({
+const SolicitudRunEmployeeSchema = new Schema({
     customerId: {
         type: String,
         trim: true,
@@ -19,7 +19,11 @@ const SolicitudRunSchema = new Schema({
     photo: {
         type: String,
         default: ''
+    },
+    isActive: {
+        type: Boolean,
+        default: false
     }
 })
-const SolicitudRun = model('SolicitudRun', SolicitudRunSchema)
-export default SolicitudRun;
+const SolicitudRunEmployee = model('SolicitudRunEmployee', SolicitudRunEmployeeSchema)
+export default SolicitudRunEmployee;

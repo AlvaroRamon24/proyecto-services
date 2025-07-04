@@ -16,8 +16,8 @@ const RejectionRequestModal = ({ isOpen, onClose, employeeId, customerId, servic
       return;
     }
 
-    if (comment.trim().length > 40) {
-      alert('El comentario no puede tener más de 40 caracteres');
+    if (comment.trim().length > 120) {
+      alert('El comentario no puede tener más de 120 caracteres');
       return;
     }
     const payload = {
