@@ -4,7 +4,7 @@ import axios from 'axios';
 
 export default function ChatBox({
   roomId,
-  onMensajesUpdate = () => {},
+  onMensajesUpdate = () => { },
   mensajesIniciales,
   usuarioId,
   destinatario,
@@ -79,7 +79,7 @@ export default function ChatBox({
     socket.emit('stopTyping', { roomId });
 
     try {
-       await axios.post('http://localhost:4500/message/', { roomId, mensaje });
+      await axios.post('http://localhost:4500/message/', { roomId, mensaje });
     } catch (error) {
       console.error('Error al enviar el mensaje:', error);
     }
@@ -90,32 +90,56 @@ export default function ChatBox({
 
   return (
     <div style={{ ...chatStyle.container, ...style }}>
-      <div style={chatStyle.header}>
-        <img
-          src={imageUrl}
-          alt={destinatario}
-          style={{
-            width: '30px',
-            height: '30px',
-            borderRadius: '50%',
-            objectFit: 'cover',
-            marginRight: '10px',
-          }}
-        />
-        {destinatario}
+      {/* Header con imagen, nombre centrado y botón ✕ a la derecha */}
+      <div
+        style={{
+          ...chatStyle.header,
+          position: 'relative',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '10px',
+        }}
+      >
+        {/* Imagen + nombre centrado */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img
+            src={imageUrl}
+            alt={destinatario}
+            style={{
+              width: '30px',
+              height: '30px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+            }}
+          />
+          <span>{destinatario}</span>
+        </div>
+
+        {/* Botón de cerrar alineado a la derecha */}
         <button
           onClick={() => setVisible(false)}
           style={{
+            position: 'absolute',
+            right: '10px',
             background: 'transparent',
-            border: 'none',
+            border: '1px solid white',
+            borderRadius: '50%',
+            width: '26px',
+            height: '26px',
             color: '#fff',
             fontSize: '18px',
             cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           ✕
         </button>
       </div>
+
+      {/* Mensajes */}
       <div style={chatStyle.mensajes}>
         {mensajes.map((m, i) => (
           <div
@@ -141,6 +165,8 @@ export default function ChatBox({
         )}
         <div ref={mensajesEndRef} />
       </div>
+
+      {/* Input para enviar mensajes */}
       <div style={chatStyle.inputContainer}>
         <input
           value={nuevo}
@@ -180,7 +206,7 @@ const chatStyle = {
     zIndex: 2000,
   },
   header: {
-    backgroundColor: '#0084ff',
+    backgroundColor: '#005bb5',
     color: '#fff',
     padding: 10,
     display: 'flex',

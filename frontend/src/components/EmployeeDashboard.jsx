@@ -6,30 +6,19 @@ import {
   Menu,
   X,
   Home,
-  BarChart3,
   Calendar,
   Settings,
-  CreditCard,
   Briefcase,
-  TrendingUp,
   DollarSign,
-  Activity,
   Users,
-  Mail,
-  Phone,
+  Store,
+  MessageCircleMore,
   LogOut,
   UserCircle,
-  CheckCircle,
   Clock,
   Star,
   MapPin,
-  Wrench,
   Save,
-  Camera,
-  Edit3,
-  Lock,
-  Eye,
-  EyeOff
 } from 'lucide-react';
 import '../App.css';
 import axios from 'axios';
@@ -37,6 +26,18 @@ import { useParams } from 'react-router-dom';
 import ChatBox from './ChatBox.jsx';
 import ReviewPopup from './ReviewPopup.jsx';
 import socket from '../socket.js'; // Asegúrate de que la ruta sea correcta
+import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import Divider from '@mui/material/Divider';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemAvatar from '@mui/material/ListItemAvatar';
+import Avatar from '@mui/material/Avatar';
+import Typography from '@mui/material/Typography';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
 import RejectionRequestModal from './RejectionRequestModal.jsx'
 const citiesWithDistricts = {
   Lima: [
@@ -161,7 +162,7 @@ const EmployeeDashboard = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [fotoUrl, setFotoUrl] = useState('');
   const [nombreOtroUsuario, setNombreOtroUsuario] = useState('');
-  //
+  
   // Estado para el formulario de configuración
   const [settingsForm, setSettingsForm] = useState({
     name: "",
@@ -240,15 +241,6 @@ const EmployeeDashboard = () => {
     earnings: "S/. 2,450"
   };
 
-  // Notificaciones específicas para empleados
-  const notifications = [
-    { id: 1, title: 'Nueva solicitud de trabajo', message: 'Reparación eléctrica en San Isidro', time: '2 min', unread: true },
-    { id: 2, title: 'Trabajo completado', message: 'Pago de S/. 150 procesado', time: '1 hora', unread: true },
-    { id: 3, title: 'Recordatorio', message: 'Cita programada para mañana 10:00 AM', time: '3 horas', unread: false },
-    { id: 4, title: 'Nueva reseña', message: 'Cliente te calificó con 5 estrellas', time: '1 día', unread: true },
-    { id: 5, title: 'Actualización de perfil', message: 'Verifica tu información de contacto', time: '2 días', unread: false }
-  ];
-
   // Menú específico para empleados
   const menuItems = [
     { id: 'overview', label: 'Panel Principal', icon: Home },
@@ -256,9 +248,6 @@ const EmployeeDashboard = () => {
     { id: 'calendar', label: 'Calendario', icon: Calendar },
     { id: 'earnings', label: 'Mis Ganancias', icon: DollarSign },
     { id: 'reviews', label: 'Reseñas', icon: Star },
-    { id: 'services', label: 'Mis Servicios', icon: Wrench },
-    { id: 'clients', label: 'Mis Clientes', icon: Users },
-    { id: 'analytics', label: 'Estadísticas', icon: BarChart3 },
     { id: 'settings', label: 'Configuración', icon: Settings }
   ];
 
@@ -350,7 +339,7 @@ const EmployeeDashboard = () => {
     updated.splice(index, 1);
     setSettingsForm((prev) => ({ ...prev, coverage: updated }));
   };
- 
+
   //Guardamos la foto seleccionada en editar perfil
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -401,11 +390,11 @@ const EmployeeDashboard = () => {
 
 
   // Cuando employee acepta la solicitud emite y se une al chat privado(join_chat)
-  const aceptarSolicitud =  async (customerId, solicitudId) => {
+  const aceptarSolicitud = async (customerId, solicitudId) => {
     socket.emit('join_chat', { customerId, employeeId: id, isInitiator: true });
     try {
       const response = await axios.put(`http://localhost:4500/solicitud/update/${solicitudId}`)
-      setSolicitudes(prev => prev.filter(el => el._id !== solicitudId)); 
+      setSolicitudes(prev => prev.filter(el => el._id !== solicitudId));
       console.log(response.data);
     } catch (error) {
       console.error('Error al modificar Solicitud', error);
@@ -471,8 +460,8 @@ const EmployeeDashboard = () => {
     };
   }, [id]);
 
-   //Apena renderiza la pagina hace peticion para traer todas las solicitudes con ese id pendiente
-   useEffect(() => {
+  //Apena renderiza la pagina hace peticion para traer todas las solicitudes con ese id pendiente
+  useEffect(() => {
     const getSolicitudRun = async () => {
       try {
         const response = await axios.get(`http://localhost:4500/solicitud/employee/run/${id}`)
@@ -482,283 +471,283 @@ const EmployeeDashboard = () => {
       }
     }
     getSolicitudRun()
-  },[id])
+  }, [id])
 
   // Renderizar el contenido según la sección activa
   const renderMainContent = () => {
     if (activeSection === 'settings') {
       return (
-        <div className="container-fluid px-4">
+        <div className="container-fluid">
           <div className="row justify-content-center">
-            <div className="col-12 col-xl-10">
-              <div className="card border-0 shadow-sm" style={{ borderRadius: '15px' }}>
-                <div className="card-header bg-white border-0 py-4">
-                  <div className="d-flex align-items-center">
-                    <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '48px', height: '48px' }}>
-                      <Settings size={24} className="text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="mb-1 fw-bold">Configuración de Perfil</h4>
-                      <p className="text-muted mb-0">Actualiza tu información personal y preferencias</p>
-                    </div>
+
+            <div className="card shadow-sm" style={{ borderRadius: '15px' }}>
+              <div className="card-header bg-white">
+                <div className="d-flex align-items-center">
+                  <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center">
+                    <Settings size={24} className="text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="mb-1 fw-bold">Configuración de Perfil</h4>
+                    <p className="text-muted mb-0">Actualiza tu información personal y preferencias</p>
                   </div>
                 </div>
+              </div>
 
-                <div className="card-body p-4">
-                  <form onSubmit={handleSubmit}>
-                    <div className="row g-4">
-                      {/* Foto de perfil */}
-                      <div className="col-md-4 d-flex">
-                        <div className="card border w-100" style={{
-                          borderRadius: '8px',
-                          borderColor: '#dee2e6',
-                          backgroundColor: '#f8f9fa'
-                        }}>
-                          <div className="card-body p-3 d-flex flex-column justify-content-between">
-                            <h6 className="fw-semibold text-dark mb-3 text-center border-bottom pb-2">
-                              <i className="fas fa-camera me-2 text-secondary"></i>
-                              Foto de Perfil
-                            </h6>
-                            <div className="text-center mb-3">
-                              <div className="position-relative d-inline-block">
-                                {settingsForm.photo && settingsForm.photo.trim() !== '' ? (
-                                  <img
-                                    src={settingsForm.photo}
-                                    alt="Vista previa"
-                                    className="border rounded-circle"
-                                    style={{
-                                      width: '120px',
-                                      height: '120px',
-                                      objectFit: 'cover',
-                                      borderColor: '#dee2e6 !important',
-                                      borderWidth: '2px'
-                                    }}
-                                  />
-                                ) : (
-                                  <img
-                                    src="https://media.istockphoto.com/id/2171382633/es/vector/icono-de-perfil-de-usuario-símbolo-de-persona-anónima-gráfico-de-avatar-en-blanco.jpg?s=612x612&w=0&k=20&c=4R1fa1xdOWF2fXr6LSwe0L7O1ojy60Mcy0n624Z4qns="
-                                    alt="Vista default"
-                                    className="border rounded-circle"
-                                    style={{
-                                      width: '120px',
-                                      height: '120px',
-                                      objectFit: 'cover',
-                                      borderColor: '#dee2e6 !important',
-                                      borderWidth: '2px'
-                                    }}
-                                  />
-                                )}
-                                <div className="position-absolute bottom-0 end-0 bg-secondary rounded-circle p-1" style={{ border: '2px solid white' }}>
-                                  <i className="fas fa-camera text-white small"></i>
-                                </div>
+              <div className="card-body" style={{ width: "820px" }}>
+                <form onSubmit={handleSubmit}>
+                  <div className="row">
+                    {/* Foto de perfil */}
+                    <div className="col-md-4 d-flex">
+                      <div className="card border w-100" style={{
+                        borderRadius: '8px',
+                        borderColor: '#dee2e6',
+                        backgroundColor: '#f8f9fa'
+                      }}>
+                        <div className="card-body p-3 d-flex flex-column justify-content-between">
+                          <h6 className="fw-semibold text-dark mb-3 text-center border-bottom pb-2">
+                            <i className="fas fa-camera me-2 text-secondary"></i>
+                            Foto de Perfil
+                          </h6>
+                          <div className="text-center mb-3">
+                            <div className="position-relative d-inline-block">
+                              {settingsForm.photo && settingsForm.photo.trim() !== '' ? (
+                                <img
+                                  src={settingsForm.photo}
+                                  alt="Vista previa"
+                                  className="border rounded-circle"
+                                  style={{
+                                    width: '120px',
+                                    height: '120px',
+                                    objectFit: 'cover',
+                                    borderColor: '#dee2e6 !important',
+                                    borderWidth: '2px'
+                                  }}
+                                />
+                              ) : (
+                                <img
+                                  src="https://media.istockphoto.com/id/2171382633/es/vector/icono-de-perfil-de-usuario-símbolo-de-persona-anónima-gráfico-de-avatar-en-blanco.jpg?s=612x612&w=0&k=20&c=4R1fa1xdOWF2fXr6LSwe0L7O1ojy60Mcy0n624Z4qns="
+                                  alt="Vista default"
+                                  className="border rounded-circle"
+                                  style={{
+                                    width: '120px',
+                                    height: '120px',
+                                    objectFit: 'cover',
+                                    borderColor: '#dee2e6 !important',
+                                    borderWidth: '2px'
+                                  }}
+                                />
+                              )}
+                              <div className="position-absolute bottom-0 end-0 bg-secondary rounded-circle p-1" style={{ border: '2px solid white' }}>
+                                <i className="fas fa-camera text-white small"></i>
                               </div>
                             </div>
-                            <div>
-                              <label className="form-label fw-semibold text-secondary mb-2 small">
-                                <i className="fas fa-upload me-1"></i>
-                                Subir nueva foto
-                              </label>
-                              <input
-                                type="file"
-                                name="photo"
-                                className="form-control form-control-sm border"
-                                style={{ borderRadius: '6px', backgroundColor: '#fff', borderColor: '#dee2e6' }}
-                                onChange={handleFileChange}
-                              />
-                            </div>
+                          </div>
+                          <div>
+                            <label className="form-label fw-semibold text-secondary mb-2 small">
+                              <i className="fas fa-upload me-1"></i>
+                              Subir nueva foto
+                            </label>
+                            <input
+                              type="file"
+                              name="photo"
+                              className="form-control form-control-sm border"
+                              style={{ borderRadius: '6px', backgroundColor: '#fff', borderColor: '#dee2e6' }}
+                              onChange={handleFileChange}
+                            />
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      {/* Información Personal */}
-                      <div className="col-12">
-                        <h5 className="mb-3 d-flex align-items-center">
-                          <User size={20} className="me-2 text-primary" />
-                          Información Personal
-                        </h5>
-                      </div>
+                    {/* Información Personal */}
+                    <div className="col-12">
+                      <h5 className="mb-3 d-flex align-items-center">
+                        <User size={20} className="me-2 text-primary" />
+                        Información Personal
+                      </h5>
+                    </div>
 
-                      <div className="col-md-6">
-                        <label className="form-label fw-medium">Nombre <span className="text-danger">*</span></label>
-                        <input
-                          type="text"
-                          name='name'
-                          className="form-control form-control-lg border-employee"
-                          value={settingsForm.name}
-                          onChange={handleInputChange}
-                          maxLength={30}
-                          placeholder="Ingresa tu nombre"
-                          required
-                        />
-                      </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-medium">Nombre <span className="text-danger">*</span></label>
+                      <input
+                        type="text"
+                        name='name'
+                        className="form-control form-control-lg border-employee"
+                        value={settingsForm.name}
+                        onChange={handleInputChange}
+                        maxLength={30}
+                        placeholder="Ingresa tu nombre"
+                        required
+                      />
+                    </div>
 
-                      <div className="col-md-6">
-                        <label className="form-label fw-medium">Apellidos <span className="text-danger">*</span></label>
-                        <input
-                          type="text"
-                          name='lastName'
-                          className="form-control form-control-lg border-employee"
-                          value={settingsForm.lastName}
-                          onChange={handleInputChange}
-                          maxLength={30}
-                          placeholder="Ingresa tus apellidos"
-                          required
-                        />
-                      </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-medium">Apellidos <span className="text-danger">*</span></label>
+                      <input
+                        type="text"
+                        name='lastName'
+                        className="form-control form-control-lg border-employee"
+                        value={settingsForm.lastName}
+                        onChange={handleInputChange}
+                        maxLength={30}
+                        placeholder="Ingresa tus apellidos"
+                        required
+                      />
+                    </div>
 
-                      <div className="col-md-6">
-                        <label className="form-label fw-medium">Celular</label>
-                        <input
-                          type="tel"
-                          name='phone'
-                          className="form-control form-control-lg border-employee"
-                          value={settingsForm.phone}
-                          minLength={9}
-                          maxLength={9}
-                          onChange={handleInputChange}
-                          placeholder="Número de celular"
-                        />
-                      </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-medium">Celular</label>
+                      <input
+                        type="tel"
+                        name='phone'
+                        className="form-control form-control-lg border-employee"
+                        value={settingsForm.phone}
+                        minLength={9}
+                        maxLength={9}
+                        onChange={handleInputChange}
+                        placeholder="Número de celular"
+                      />
+                    </div>
 
-                      <div className="col-md-6">
-                        <label className="form-label fw-medium">Documento de Identidad</label>
-                        <input
-                          type="text"
-                          name='document'
-                          className="form-control form-control-lg border-employee"
-                          value={settingsForm.document}
-                          minLength={8}
-                          maxLength={8}
-                          onChange={handleInputChange}
-                          placeholder="DNI"
-                        />
-                      </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-medium">Documento de Identidad</label>
+                      <input
+                        type="text"
+                        name='document'
+                        className="form-control form-control-lg border-employee"
+                        value={settingsForm.document}
+                        minLength={8}
+                        maxLength={8}
+                        onChange={handleInputChange}
+                        placeholder="DNI"
+                      />
+                    </div>
 
-                      {/* Ubicación */}
-                      <div className="col-12 mt-4">
-                        <h5 className="mb-3 d-flex align-items-center">
-                          <MapPin size={20} className="me-2 text-primary" />
-                          Ubicación
-                        </h5>
-                      </div>
+                    {/* Ubicación */}
+                    <div className="col-12 mt-4">
+                      <h5 className="mb-3 d-flex align-items-center">
+                        <MapPin size={20} className="me-2 text-primary" />
+                        Ubicación
+                      </h5>
+                    </div>
 
-                      <div className="col-12 col-md-6">
-                        <label className="form-label fw-semibold text-dark mb-2 d-flex align-items-center">
-                          <div className="d-flex align-items-center justify-content-center me-2" style={{
-                            width: '24px',
-                            height: '24px',
-                            backgroundColor: '#f8f9fa',
-                            borderRadius: '6px'
-                          }}>
-                            <i className="fas fa-city text-secondary" style={{ fontSize: '18px' }}></i>
-                          </div>
-                          Ciudad
-                        </label>
-                        <select
-                          className="form-select border-2 shadow-sm"
-                          name="city"
-                          value={settingsForm.city || ""}
-                          onChange={handleInputChange}
-                          style={{
-                            borderRadius: '18px',
-                            borderColor: '#e9ecef',
-                            backgroundColor: '#fff',
-                            padding: '12px 16px',
-                            fontSize: '18px',
-                            transition: 'all 0.2s ease'
-                          }}
-                          onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                          onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
-                        >
-                          {!settingsForm.city && <option value="" disabled>Seleccione una ciudad</option>}
-                          <option value="Lima">Lima</option>
-                          <option value="Arequipa">Arequipa</option>
-                          <option value="Cusco">Cusco</option>
-                          <option value="Trujillo">Trujillo</option>
-                          <option value="Chiclayo">Chiclayo</option>
-                          <option value="Piura">Piura</option>
-                          <option value="Iquitos">Iquitos</option>
-                          <option value="Huancayo">Huancayo</option>
-                          <option value="Tacna">Tacna</option>
-                          <option value="Chimbote">Chimbote</option>
-                          <option value="Juliaca">Juliaca</option>
-                          <option value="Ica">Ica</option>
-                          <option value="Pucallpa">Pucallpa</option>
-                          <option value="Cajamarca">Cajamarca</option>
-                          <option value="Sullana">Sullana</option>
-                          <option value="Ayacucho">Ayacucho</option>
-                          <option value="Chincha">Chincha</option>
-                          <option value="Huánuco">Huánuco</option>
-                          <option value="Tarapoto">Tarapoto</option>
-                          <option value="Puno">Puno</option>
-                        </select>
-                      </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label fw-semibold text-dark mb-2 d-flex align-items-center">
+                        <div className="d-flex align-items-center justify-content-center me-2" style={{
+                          width: '24px',
+                          height: '24px',
+                          backgroundColor: '#f8f9fa',
+                          borderRadius: '6px'
+                        }}>
+                          <i className="fas fa-city text-secondary" style={{ fontSize: '18px' }}></i>
+                        </div>
+                        Ciudad
+                      </label>
+                      <select
+                        className="form-select border-2 shadow-sm"
+                        name="city"
+                        value={settingsForm.city || ""}
+                        onChange={handleInputChange}
+                        style={{
+                          borderRadius: '18px',
+                          borderColor: '#e9ecef',
+                          backgroundColor: '#fff',
+                          padding: '12px 16px',
+                          fontSize: '18px',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                        onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                      >
+                        {!settingsForm.city && <option value="" disabled>Seleccione una ciudad</option>}
+                        <option value="Lima">Lima</option>
+                        <option value="Arequipa">Arequipa</option>
+                        <option value="Cusco">Cusco</option>
+                        <option value="Trujillo">Trujillo</option>
+                        <option value="Chiclayo">Chiclayo</option>
+                        <option value="Piura">Piura</option>
+                        <option value="Iquitos">Iquitos</option>
+                        <option value="Huancayo">Huancayo</option>
+                        <option value="Tacna">Tacna</option>
+                        <option value="Chimbote">Chimbote</option>
+                        <option value="Juliaca">Juliaca</option>
+                        <option value="Ica">Ica</option>
+                        <option value="Pucallpa">Pucallpa</option>
+                        <option value="Cajamarca">Cajamarca</option>
+                        <option value="Sullana">Sullana</option>
+                        <option value="Ayacucho">Ayacucho</option>
+                        <option value="Chincha">Chincha</option>
+                        <option value="Huánuco">Huánuco</option>
+                        <option value="Tarapoto">Tarapoto</option>
+                        <option value="Puno">Puno</option>
+                      </select>
+                    </div>
 
-                      <div className="col-12 col-md-6">
-                        <label className="form-label fw-semibold text-dark mb-2 d-flex align-items-center">
-                          <div className="d-flex align-items-center justify-content-center me-2" style={{
-                            width: '24px',
-                            height: '24px',
-                            backgroundColor: '#f8f9fa',
-                            borderRadius: '6px'
-                          }}>
-                            <i className="fas fa-map-marker-alt text-secondary" style={{ fontSize: '18px' }}></i>
-                          </div>
-                          Distrito
-                        </label>
-                        <select
-                          className="form-select border-2 shadow-sm"
-                          name="district"
-                          value={settingsForm.district || ""}
-                          onChange={handleInputChange}
-                          style={{
-                            borderRadius: '18px',
-                            borderColor: '#e9ecef',
-                            backgroundColor: '#fff',
-                            padding: '12px 16px',
-                            fontSize: '18px',
-                            transition: 'all 0.2s ease'
-                          }}
-                          disabled={!settingsForm.city}
-                          onFocus={(e) => !e.target.disabled && (e.target.style.borderColor = '#667eea')}
-                          onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
-                        >
-                          <option value="">
-                            {settingsForm.city ? "Seleccione un distrito" : "Primero seleccione una ciudad"}
-                          </option>
-                          {settingsForm.city && citiesWithDistricts[settingsForm.city] &&
-                            citiesWithDistricts[settingsForm.city].map((district, index) => (
-                              <option key={`district-${index}`} value={district}>
-                                {district}
-                              </option>
-                            ))
-                          }
-                        </select>
-                      </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label fw-semibold text-dark mb-2 d-flex align-items-center">
+                        <div className="d-flex align-items-center justify-content-center me-2" style={{
+                          width: '24px',
+                          height: '24px',
+                          backgroundColor: '#f8f9fa',
+                          borderRadius: '6px'
+                        }}>
+                          <i className="fas fa-map-marker-alt text-secondary" style={{ fontSize: '18px' }}></i>
+                        </div>
+                        Distrito
+                      </label>
+                      <select
+                        className="form-select border-2 shadow-sm"
+                        name="district"
+                        value={settingsForm.district || ""}
+                        onChange={handleInputChange}
+                        style={{
+                          borderRadius: '18px',
+                          borderColor: '#e9ecef',
+                          backgroundColor: '#fff',
+                          padding: '12px 16px',
+                          fontSize: '18px',
+                          transition: 'all 0.2s ease'
+                        }}
+                        disabled={!settingsForm.city}
+                        onFocus={(e) => !e.target.disabled && (e.target.style.borderColor = '#667eea')}
+                        onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                      >
+                        <option value="">
+                          {settingsForm.city ? "Seleccione un distrito" : "Primero seleccione una ciudad"}
+                        </option>
+                        {settingsForm.city && citiesWithDistricts[settingsForm.city] &&
+                          citiesWithDistricts[settingsForm.city].map((district, index) => (
+                            <option key={`district-${index}`} value={district}>
+                              {district}
+                            </option>
+                          ))
+                        }
+                      </select>
+                    </div>
 
 
-                      <div className="col-md-10">
-                        <label className="form-label fw-medium">Dirección</label>
-                        <input
-                          type="text"
-                          name='address'
-                          className="form-control form-control-lg border-employee"
-                          value={settingsForm.address}
-                          onChange={handleInputChange}
-                          maxLength={40}
-                          placeholder="Av. Principal 123"
-                        />
-                      </div>
+                    <div className="col-md-10">
+                      <label className="form-label fw-medium">Dirección</label>
+                      <input
+                        type="text"
+                        name='address'
+                        className="form-control form-control-lg border-employee"
+                        value={settingsForm.address}
+                        onChange={handleInputChange}
+                        maxLength={40}
+                        placeholder="Av. Principal 123"
+                      />
+                    </div>
 
-                      {/* Información Profesional */}
-                      <div className="col-12 mt-5">
-                        <h5 className="mb-3 d-flex align-items-center">
-                          <Briefcase size={20} className="me-2 text-primary" />
-                          Información Profesional
-                        </h5>
-                      </div>
+                    {/* Información Profesional */}
+                    <div className="col-12 mt-5">
+                      <h5 className="mb-3 d-flex align-items-center">
+                        <Briefcase size={20} className="me-2 text-primary" />
+                        Información Profesional
+                      </h5>
+                    </div>
 
-                      {/* Información de la cobertura 
+                    {/* Información de la cobertura 
                       <div className="col-md-6">
                         <label className="form-label fw-medium">Cobertura de Servicios</label>
                         <div className="d-flex mb-2">
@@ -791,131 +780,128 @@ const EmployeeDashboard = () => {
                         )}
                       </div>
                       */}
-                      {/* Servicios prueba */}
+                    {/* Servicios prueba */}
 
-                      <div className="col-md-6">
-                        <label className="form-label fw-medium">Cobertura de Servicios</label>
+                    <div className="col-md-6">
+                      <label className="form-label fw-medium">Cobertura de Servicios</label>
 
-                        {/* Ciudad */}
+                      {/* Ciudad */}
+                      <select
+                        className="form-select mb-2"
+                        value={selectedCity}
+                        onChange={handleCityChange}
+                      >
+                        <option value="">Selecciona una ciudad</option>
+                        {Object.keys(citiesWithDistricts).map((city) => (
+                          <option key={city} value={city}>
+                            {city}
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* Distrito (se filtra por ciudad) */}
+                      <div className="d-flex mb-2">
                         <select
-                          className="form-select mb-2"
-                          value={selectedCity}
-                          onChange={handleCityChange}
+                          className="form-select me-2"
+                          value={selectedDistrict}
+                          onChange={handleDistrictChange}
+                          disabled={!selectedCity}
                         >
-                          <option value="">Selecciona una ciudad</option>
-                          {Object.keys(citiesWithDistricts).map((city) => (
-                            <option key={city} value={city}>
-                              {city}
-                            </option>
-                          ))}
+                          <option value="">Selecciona un distrito</option>
+                          {selectedCity &&
+                            citiesWithDistricts[selectedCity]?.map((district) => (
+                              <option key={district} value={district}>
+                                {district}
+                              </option>
+                            ))}
                         </select>
 
-                        {/* Distrito (se filtra por ciudad) */}
-                        <div className="d-flex mb-2">
-                          <select
-                            className="form-select me-2"
-                            value={selectedDistrict}
-                            onChange={handleDistrictChange}
-                            disabled={!selectedCity}
-                          >
-                            <option value="">Selecciona un distrito</option>
-                            {selectedCity &&
-                              citiesWithDistricts[selectedCity]?.map((district) => (
-                                <option key={district} value={district}>
-                                  {district}
-                                </option>
-                              ))}
-                          </select>
-
-                          <button type="button" className="btn btn-primary" onClick={addDistrict}>
-                            Agregar
-                          </button>
-                        </div>
-
-                        {/* Lista de distritos agregados */}
-                        {settingsForm.coverage.length > 0 && (
-                          <ul className="list-group">
-                            {settingsForm.coverage.map((district, index) => (
-                              <li
-                                key={index}
-                                className="list-group-item d-flex justify-content-between align-items-center"
-                              >
-                                {district}
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-danger"
-                                  onClick={() => removeDistrict(index)}
-                                >
-                                  Eliminar
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
+                        <button type="button" className="btn btn-primary" onClick={addDistrict}>
+                          Agregar
+                        </button>
                       </div>
 
-
-
-
-                      {/* Servicios Específicos */}
-                      <h2>Agregar Servicios</h2>
-                      {services.map((service, index) => (
-                        <div key={index} style={{ marginBottom: "15px", border: "1px solid #ddd", padding: "10px", borderRadius: "5px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                            <h5>Servicio {index + 1}</h5>
-                            {services.length > 1 && (
+                      {/* Lista de distritos agregados */}
+                      {settingsForm.coverage.length > 0 && (
+                        <ul className="list-group">
+                          {settingsForm.coverage.map((district, index) => (
+                            <li
+                              key={index}
+                              className="list-group-item d-flex justify-content-between align-items-center"
+                            >
+                              {district}
                               <button
                                 type="button"
-                                onClick={() => removeService(index)}
-                                style={{
-                                  backgroundColor: "#dc3545",
-                                  color: "white",
-                                  border: "none",
-                                  borderRadius: "5px",
-                                  padding: "5px 10px",
-                                  cursor: "pointer"
-                                }}
+                                className="btn btn-sm btn-danger"
+                                onClick={() => removeDistrict(index)}
                               >
                                 Eliminar
                               </button>
-                            )}
-                          </div>
-                          <input
-                            type="text"
-                            placeholder="Nombre del servicio"
-                            value={service.name}
-                            onChange={(e) => handleChange(index, "name", e.target.value)}
-                            required
-                            style={{ width: "100%", padding: "8px", marginBottom: "5px" }}
-                          />
-                          <textarea
-                            placeholder="Descripción del servicio"
-                            value={service.description}
-                            onChange={(e) => handleChange(index, "description", e.target.value)}
-                            required
-                            style={{ width: "100%", padding: "8px" }}
-                          ></textarea>
-                        </div>
-                      ))}
-                      <button type="button" className="btn btn-primary" onClick={addService}>Agregar otro servicio</button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
 
-                      {/* Botones de acción */}
-                      <div className="col-12 mt-5">
-                        <div className="d-flex gap-3 justify-content-end">
-                          <button
-                            type="submit"
-                            className="btn btn-primary btn-lg px-4 d-flex align-items-center"
-                          >
-                            <Save size={18} className="me-2" />
-                            Guardar Cambios
-                          </button>
+                    {/* Servicios Específicos */}
+                    <h2>Agregar Servicios</h2>
+                    {services.map((service, index) => (
+                      <div key={index} style={{ marginBottom: "15px", border: "1px solid #ddd", padding: "10px", borderRadius: "5px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                          <h5>Servicio {index + 1}</h5>
+                          {services.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeService(index)}
+                              style={{
+                                backgroundColor: "#dc3545",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "5px",
+                                padding: "5px 10px",
+                                cursor: "pointer"
+                              }}
+                            >
+                              Eliminar
+                            </button>
+                          )}
                         </div>
+                        <input
+                          type="text"
+                          placeholder="Nombre del servicio"
+                          value={service.name}
+                          onChange={(e) => handleChange(index, "name", e.target.value)}
+                          required
+                          style={{ width: "100%", padding: "8px", marginBottom: "5px" }}
+                        />
+                        <textarea
+                          placeholder="Descripción del servicio"
+                          value={service.description}
+                          onChange={(e) => handleChange(index, "description", e.target.value)}
+                          required
+                          style={{ width: "100%", padding: "8px" }}
+                        ></textarea>
+                      </div>
+                    ))}
+                    <button type="button" className="btn btn-primary" onClick={addService}>Agregar otro servicio</button>
+
+                    {/* Botones de acción */}
+                    <div className="col-12 mt-5">
+                      <div className="d-flex gap-3 justify-content-end">
+                        <button
+                          type="submit"
+                          className="btn btn-primary btn-lg px-4 d-flex align-items-center"
+                        >
+                          <Save size={18} className="me-2" />
+                          Guardar Cambios
+                        </button>
                       </div>
                     </div>
-                  </form>
-                </div>
+                  </div>
+                </form>
               </div>
             </div>
+
           </div>
         </div>
       );
@@ -924,325 +910,272 @@ const EmployeeDashboard = () => {
     return (
       <div className="container-fluid px-4">
         <div className="row">
-          <div className="col-12">
-            <div className="card border-0 shadow-sm" style={{ minHeight: '500px', borderRadius: '15px' }}>
-              <div className="card-body d-flex align-items-center justify-content-center">
-                <div>
+          <div className="card border-0 shadow-sm" style={{ minHeight: '500px', borderRadius: '15px' }}>
+            <div className="card-body d-flex align-items-center justify-content-center">
+              <div>
 
-                  {/* Header Section */}
+                {/* Header Section */}
+                <div className="row mb-5 p-2" style={{ width: "800px" }}>
+                  <div className="p-2">
+                    <div className="card border-0 shadow-lg" style={{
+                      background: '#667eea',
+                      //width: '800px',
+                      borderRadius: '20px'
+                    }}>
+                      <div className="card-body">
+                        <div className="d-flex align-items-center">
+                          <div className="position-relative">
+                            <img
+                              src={settingsForm.photo}
+                              alt="Avatar"
+                              className="rounded-circle border border-white border-3"
+                              width="80"
+                              height="80"
+                              style={{ objectFit: 'cover' }}
+                            />
+                            <div
+                              className="position-absolute bottom-0 end-0 bg-success rounded-circle border border-white"
+                              style={{ width: '20px', height: '20px' }}
+                            ></div>
+                          </div>
+                          <div className="ms-4 text-white">
+                            <h2 className="mb-1 fw-bold">¡Hola, {employeeData.name}! 👋</h2>
+                            <p className="mb-0 opacity-75">Bienvenido de vuelta. ¿En qué podemos ayudarte hoy?</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* verificar cuenta */}
+                <div className="row mb-5">
+                  <div className="col-12">
+                    <div
+                      className="card border-0 shadow-lg"
+                      style={{
+                        borderRadius: '20px',
+                      }}
+                    >
+                      <div className="card-body p-0">
+                        <Stack spacing={0} sx={{ width: '100%' }}>
+                          <Alert
+                            severity="warning"
+                            variant="outlined"
+                            sx={{
+                              borderRadius: '20px',
+                              border: "2px solid",
+                              padding: '16px 20px',
+                              borderColor: '#f5b041', // color personalizado del borde
+                              color: '#000',
+                            }}
+                            action={
+                              <Button
+                                size="medium"
+                                variant="outlined"
+                                sx={{
+                                  fontWeight: 'bold',
+                                  borderRadius: '10px',
+                                  border: "2px solid",
+                                  color: '#000',
+                                  borderColor: '#f5b041', // mismo color que el alert
+                                  '&:hover': {
+                                    borderColor: '#d4ac0d',
+                                    backgroundColor: '#fef9e7',
+                                  },
+                                }}
+                              >
+                                VERIFICAR
+                              </Button>
+                            }
+                          >
+                            Tu cuenta aún no está verificada. Verifícala ahora para poder pedir servicios.
+                          </Alert>
+                        </Stack>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+
+                {solicitudes.length > 0 && (
                   <div className="row mb-5">
                     <div className="col-12">
                       <div className="card border-0 shadow-lg" style={{
-                        background: '#667eea',
-
-                        borderRadius: '20px'
+                        borderRadius: '20px',
+                        background: '#7B55D9'
                       }}>
                         <div className="card-body p-4">
-                          <div className="d-flex align-items-center">
-                            <div className="position-relative">
-                              <img
-                                src={settingsForm.photo}
-                                alt="Avatar"
-                                className="rounded-circle border border-white border-3"
-                                width="80"
-                                height="80"
-                                style={{ objectFit: 'cover' }}
-                              />
-                              <div
-                                className="position-absolute bottom-0 end-0 bg-success rounded-circle border border-white"
-                                style={{ width: '20px', height: '20px' }}
-                              ></div>
+                          <div className="d-flex align-items-center mb-4">
+                            <div className="rounded-3 p-3 me-3" style={{ background: "#9E8ADB" }}>
+                              <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+                              </svg>
                             </div>
-                            <div className="ms-4 text-white">
-                              <h2 className="mb-1 fw-bold">¡Hola, {employeeData.name}! 👋</h2>
-                              <p className="mb-0 opacity-75">Bienvenido de vuelta. ¿En qué podemos ayudarte hoy?</p>
+                            <div>
+                              <h3 className="mb-0 text-white">Solicitudes</h3>
+                              <p className="text-muted mb-0">Total: {solicitudes.length} solicitudes</p>
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Notifications servicios */}
-                  <div className="row mb-5">
-                    <div className="col-12">
-                      <div className="card border-0 shadow-lg" style={{
-                        background: '#6DAA5E',
-
-                        borderRadius: '20px'
-                      }}>
-                        <div className="card-body p-3">
-                          <div className="d-flex align-items-center">
-                            <div className="position-relative">
-
-                            </div>
-                            <div className="ms-4 text-white d-flex align-items-center justify-content-between w-100">
-                              <div className="d-flex align-items-center">
-                                <i className="bi bi-exclamation-triangle-fill text-warning fs-1 me-3"></i>
-                                <div>
-                                  <h2 className="mb-1 fw-bold">Atención!</h2>
-                                  <p className="mb-1 opacity-40">
-                                    Tu cuenta aún no está verificada. Verifícala ahora para poder agregar servicios. ¡Es muy rápido!
-                                  </p>
-                                </div>
-                              </div>
-                              <button className="btn btn-primary btn-lg me-4">Verificar</button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {solicitudes.length > 0 && (
-                    <div className="row mb-5">
-                      <div className="col-12">
-                        <div className="card border-0 shadow-lg" style={{
-                          borderRadius: '20px',
-                          background: '#7B55D9'
-                        }}>
-                          <div className="card-body p-4">
-                            <div className="d-flex align-items-center mb-4">
-                              <div className="rounded-3 p-3 me-3" style={{ background: "#9E8ADB" }}>
-                                <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-                                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-                                </svg>
-                              </div>
-                              <div>
-                                <h3 className="mb-0 text-white">Solicitudes</h3>
-                                <p className="text-muted mb-0">Total: {solicitudes.length} solicitudes</p>
-                              </div>
-                            </div>
-                            <div className="row g-4">
-                              {solicitudes.map((e) => (
-                                <div key={e._id} className="col-lg-4 col-md-6">
-                                  <div
-                                    className="card h-100 border-0 shadow-sm bg-white hover-card"
-                                    style={{
-                                      borderRadius: '15px',
-                                      transition: 'all 0.3s ease',
-                                      cursor: 'pointer',
-                                    }}
-                                  >
-                                    <div className="card-body p-4">
-                                      <div className="d-flex justify-content-between align-items-start mb-3">
-                                        {/* LADO IZQUIERDO */}
-                                        <div className="me-3">
-                                          <p className="text-muted fw-semibold mb-1">Cliente:</p>
-                                          <p className="text-dark mb-2">{e.customerNombre}</p>
-                                          <p className="text-muted fw-semibold mb-1">Servicio:</p>
-                                          <p className="text-dark mb-0">{e.service}</p>
-                                        </div>
-                                        {/* LADO DERECHO */}
-                                        <div className="text-end d-flex flex-column align-items-center">
-                                          <span className="badge bg-success rounded-pill mb-2 px-3 py-2">
-                                            <i className="fas fa-star me-1"></i> {e.customerStar}
-                                          </span>
-                                          <div
-                                            style={{
-                                              width: '80px',
-                                              height: '80px',
-                                              overflow: 'hidden',
-                                              borderRadius: '50%',
-                                            }}
-                                          >
-                                            <img
-                                              src={e.customerFoto}
-                                              alt="Foto cliente"
-                                              width="80"
-                                              height="80"
-                                              style={{ objectFit: 'cover' }}
-                                            />
-                                          </div>
-                                        </div>
-                                      </div>
-                                      <hr />
-                                      <div className="me-3" style={{ height: "100px" }}>
-                                        <p className="text-muted fw-semibold mb-1">Descripción:</p>
-                                        <p className="text-dark mb-2">{e.comment}</p>
-                                      </div>
-                                      <div className="d-flex justify-content-evenly">
-                                        <button className="btn btn-outline-primary btn-sm rounded-pill px-4"
-                                          onClick={() => aceptarSolicitud(e.customerId, e._id)}>
-                                          Aceptar
-                                        </button>
-                                        <button className="btn btn-outline-danger btn-sm rounded-pill px-4"
-                                          onClick={() => handleRechazarServicio(e.customerId, e.employeeId, e.service, e._id)}>
-                                          Rechazar
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {serviceRun.length > 0 && (
-                    <div className="row mb-5">
-                      <div className="col-12">
-                        <div
-                          className="card border-0 shadow-lg"
-                          style={{
-                            borderRadius: '20px',
-                            background: '#6fb288', // color de fondo del contenedor grande
-                            padding: '20px'
-                          }}
-                        >
-                          <div className="card-body">
-                            <div className="d-flex align-items-center mb-4">
-                              <div className="rounded-3 p-3 me-3" style={{ background: "#2196F3" }}>
-                                <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-                                  <path d="M9 2a7 7 0 0 1 6.93 6H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h4.07A7 7 0 0 1 9 2zM4 10v9h16v-9H4zm5-6a5 5 0 0 0 0 10a5 5 0 0 0 0-10z" />
-                                </svg>
-                              </div>
-                              <div>
-                                <h3 className="mb-0">Servicios en Curso</h3>
-                                <p className="text-muted mb-0">Tienes {serviceRun.length} servicio(s) activo(s)</p>
-                              </div>
-                            </div>
-
-                            {/* Tarjetas en fila */}
-                            <div className="d-flex flex-wrap gap-4 justify-content-start">
-                              {serviceRun.map((element, index) => (
+                          <div className="row g-4">
+                            {solicitudes.map((e) => (
+                              <div key={e._id} className="col-lg-4 col-md-6">
                                 <div
-                                  key={element._id}
-                                  className="card border-0 shadow-sm"
+                                  className="card h-100 border-0 shadow-sm bg-white hover-card"
                                   style={{
                                     borderRadius: '15px',
-                                    width: '48%',
-                                    minWidth: '300px',
-                                    maxWidth: '100%',
-                                    display: 'flex',
-                                    backgroundColor: '#E3F2FD',
-                                    flexDirection: 'column',
-                                    justifyContent: 'space-between'
+                                    transition: 'all 0.3s ease',
+                                    cursor: 'pointer',
                                   }}
                                 >
-                                  {/* Cuerpo con imagen + info */}
-                                  <div className="d-flex p-3" style={{ gap: '1rem' }}>
-                                    <div
-                                      style={{
-                                        width: '100px',
-                                        height: '100px',
-                                        borderRadius: '50%',
-                                        overflow: 'hidden',
-                                        flexShrink: 0
-                                      }}
-                                    >
-                                      <img
-                                        src={element.photo}
-                                        alt="Foto"
-                                        width="100"
-                                        height="100"
-                                        style={{ objectFit: 'cover' }}
-                                      />
+                                  <div className="card-body p-4">
+                                    <div className="d-flex justify-content-between align-items-start mb-3">
+                                      {/* LADO IZQUIERDO */}
+                                      <div className="me-3">
+                                        <p className="text-muted fw-semibold mb-1">Cliente:</p>
+                                        <p className="text-dark mb-2">{e.customerNombre}</p>
+                                        <p className="text-muted fw-semibold mb-1">Servicio:</p>
+                                        <p className="text-dark mb-0">{e.service}</p>
+                                      </div>
+                                      {/* LADO DERECHO */}
+                                      <div className="text-end d-flex flex-column align-items-center">
+                                        <span className="badge bg-success rounded-pill mb-2 px-3 py-2">
+                                          <i className="fas fa-star me-1"></i> {e.customerStar}
+                                        </span>
+                                        <div
+                                          style={{
+                                            width: '80px',
+                                            height: '80px',
+                                            overflow: 'hidden',
+                                            borderRadius: '50%',
+                                          }}
+                                        >
+                                          <img
+                                            src={e.customerFoto}
+                                            alt="Foto cliente"
+                                            width="80"
+                                            height="80"
+                                            style={{ objectFit: 'cover' }}
+                                          />
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="flex-grow-1 d-flex flex-column justify-content-center">
-                                      <p className="fw-bold mb-1">Cliente: {element.name}</p>
-                                      <p className="text-muted mb-0">Servicio en progreso con este usuario.</p>
+                                    <hr />
+                                    <div className="me-3" style={{ height: "100px" }}>
+                                      <p className="text-muted fw-semibold mb-1">Descripción:</p>
+                                      <p className="text-dark mb-2">{e.comment}</p>
+                                    </div>
+                                    <div className="d-flex justify-content-evenly">
+                                      <button className="btn btn-outline-primary btn-sm rounded-pill px-4"
+                                        onClick={() => aceptarSolicitud(e.customerId, e._id)}>
+                                        Aceptar
+                                      </button>
+                                      <button className="btn btn-outline-danger btn-sm rounded-pill px-4"
+                                        onClick={() => handleRechazarServicio(e.customerId, e.employeeId, e.service, e._id)}>
+                                        Rechazar
+                                      </button>
                                     </div>
                                   </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
 
-                                  <div className="card-footer bg-transparent text-center pb-3">
-                                    <button className="btn btn-primary btn-sm rounded-pill px-4"
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {serviceRun.length > 0 && (
+                  <div className="row mb-5">
+                    <div className="col-12">
+                      <div
+                        className="card border-0 shadow-lg"
+                        style={{
+                          borderRadius: '20px',
+                          background: '#6fb288', // color de fondo del contenedor grande
+                          padding: '20px'
+                        }}
+                      >
+                        <div className="card-body">
+                          <div className="d-flex align-items-center mb-4">
+                            <div className="rounded-3 p-3 me-3" style={{ background: "#2196F3" }}>
+                              <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
+                                <path d="M9 2a7 7 0 0 1 6.93 6H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2h4.07A7 7 0 0 1 9 2zM4 10v9h16v-9H4zm5-6a5 5 0 0 0 0 10a5 5 0 0 0 0-10z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h3 className="mb-0">Servicios en Curso</h3>
+                              <p className="text-muted mb-0">Tienes {serviceRun.length} servicio(s) activo(s)</p>
+                            </div>
+                          </div>
+
+                          {/* Tarjetas en fila */}
+                          <div className="d-flex flex-wrap gap-4 justify-content-start">
+                            {serviceRun.map((element, index) => (
+                              <div
+                                key={element._id}
+                                className="card border-0 shadow-sm"
+                                style={{
+                                  borderRadius: '15px',
+                                  width: '48%',
+                                  minWidth: '300px',
+                                  maxWidth: '100%',
+                                  display: 'flex',
+                                  backgroundColor: '#E3F2FD',
+                                  flexDirection: 'column',
+                                  justifyContent: 'space-between'
+                                }}
+                              >
+                                {/* Cuerpo con imagen + info */}
+                                <div className="d-flex p-3" style={{ gap: '1rem' }}>
+                                  <div
+                                    style={{
+                                      width: '100px',
+                                      height: '100px',
+                                      borderRadius: '50%',
+                                      overflow: 'hidden',
+                                      flexShrink: 0
+                                    }}
+                                  >
+                                    <img
+                                      src={element.photo}
+                                      alt="Foto"
+                                      width="100"
+                                      height="100"
+                                      style={{ objectFit: 'cover' }}
+                                    />
+                                  </div>
+                                  <div className="flex-grow-1 d-flex flex-column justify-content-center">
+                                    <p className="fw-bold mb-1">Cliente: {element.name}</p>
+                                    <p className="text-muted mb-0">Servicio en progreso con este usuario.</p>
+                                  </div>
+                                </div>
+
+                                <div className="card-footer bg-transparent text-center pb-3">
+                                  <button className="btn btn-primary btn-sm rounded-pill px-4"
                                     onClick={() => {
                                       setServicioSeleccionado(element)
                                       setShowPopup(true);
                                     }}
-                                    
-                                    >
-                                      Finalizar Servicio
-                                    </button>
-                                  </div>
+
+                                  >
+                                    Finalizar Servicio
+                                  </button>
                                 </div>
-                              ))}
-                            </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
                     </div>
-                  )}
-                  <style>{`
-  .card-hover {
-    transition: all 0.3s ease;
-  }
-  
-  .card-hover:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-  }
-  
-  .card {
-    border-radius: 12px;
-    overflow: hidden;
-  }
-  
-  .card-header {
-    border-radius: 12px 12px 0 0 !important;
-  }
-  
-  .btn {
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
-  
-  .btn:hover {
-    transform: translateY(-1px);
-  }
-  
-  .badge {
-    border-radius: 20px;
-  }
-
-  @media (max-width: 768px) {
-    .container-fluid {
-      padding-left: 1rem;
-      padding-right: 1rem;
-    }
-    
-    .card-body {
-      padding: 1.5rem;
-    }
-    
-    .d-grid.gap-2.d-md-flex {
-      grid-template-columns: 1fr;
-    }
-    
-    .d-grid.gap-2.d-md-flex .btn {
-      width: 100%;
-      margin-bottom: 0.5rem;
-    }
-    
-    .d-grid.gap-2.d-md-flex .btn:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  @media (max-width: 576px) {
-    .col-12 {
-      margin-bottom: 1rem;
-    }
-    
-    .card-body {
-      padding: 1rem;
-    }
-    
-    .card-footer {
-      padding: 0.75rem 1rem 1rem 1rem;
-    }
-  }
-                `}</style>
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
+
         </div>
       </div>
     );
@@ -1269,83 +1202,96 @@ const EmployeeDashboard = () => {
           background: transparent;
         }
         .sidebar-desktop {
-          width: 280px;
+          width: 250px;
+          border: 1px solid black;
         }
-        .main-content {
-          margin-left: 280px;
-        }
-        @media (max-width: 991.98px) {
-          .main-content {
-            margin-left: 0;
-          }
+         /* SIDEBAR DERECHO MÁS ANCHO */
+        .sidebar-desktop-right {
+          width: 350px;
         }
         .employee-sidebar {
-          background:rgb(76, 100, 206);
+          background: white;
         }
-        .employee-header {
-          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        .notification-badge {
-          animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.1); }
-          100% { transform: scale(1); }
-        }
-        .menu-item-active {
-          background: rgba(255, 255, 255, 0.2);
-          border-left: 4px solid #fff;
-        }
-        .menu-item:hover {
-          background: rgba(255, 255, 255, 0.1);
-          transform: translateX(5px);
-          transition: all 0.3s ease;
-        }
-        .stats-card {
-          background: rgba(255, 255, 255, 0.9);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .form-control:focus {
-          border-color: #4c64ce;
-          box-shadow: 0 0 0 0.25rem rgba(76, 100, 206, 0.15);
-        }
-        .form-select:focus {
-          border-color: #4c64ce;
-          box-shadow: 0 0 0 0.25rem rgba(76, 100, 206, 0.15);
-        }
+        
       `}</style>
 
-      <div className="min-h-screen bg-light">
+      <style>{`
+        .btn-ghost:hover {
+    background-color: #f8f9fa;
+  }
+  .btn-ghost {
+    border: none;
+    background: transparent;
+  }
+  .sidebar-desktop {
+    width: 250px;
+  }
+  
+  /* SIDEBAR DERECHO MÁS ANCHO */
+  .sidebar-desktop-right {
+    width: 350px;
+  }
+  
+  /* CONTENIDO PRINCIPAL CENTRADO CON NUEVAS MEDIDAS */
+  .main-content {
+    margin-left: 250px;  /* Espacio para sidebar izquierdo */
+    margin-right: 350px; /* Espacio para sidebar derecho (ahora más ancho) */
+    transition: margin 0.3s ease;
+  }
+  
+  /* Para pantallas medianas (tablets) */
+  @media (max-width: 1199.98px) {
+    .main-content {
+      margin-left: 0;
+      margin-right: 0;
+    }
+  }
+  
+  /* Para pantallas pequeñas (móviles) */
+  @media (max-width: 991.98px) {
+    .main-content {
+      margin-left: 0;
+      margin-right: 0;
+    }
+  }
+  
+  /* Ajustes adicionales para mejor responsividad */
+  @media (min-width: 992px) and (max-width: 1199.98px) {
+    .sidebar-desktop {
+      width: 200px;
+    }
+    .sidebar-desktop-right {
+      width: 280px;
+    }
+    .main-content {
+      margin-left: 200px;
+      margin-right: 280px;
+    }
+  }
+  
+  /* Para pantallas muy grandes */
+  @media (min-width: 1400px) {
+    .main-content {
+      margin-left: 250px;
+      margin-right: 350px;
+      max-width: none;
+    }
+  }
+  
+  .table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+  }
+      `}</style>
+      <div className="min-h-screen">
         {/* Sidebar Desktop */}
-        <div className="position-fixed top-0 start-0 h-100 text-white shadow-lg d-none d-lg-block sidebar-desktop employee-sidebar" style={{ zIndex: 1000 }}>
+        <div className="position-fixed top-0 start-0 h-100 shadow-lg d-none d-lg-block sidebar-desktop employee-sidebar" style={{ zIndex: 1000 }}>
           {/* Logo y Perfil del Empleado */}
-          <div className="p-4 border-bottom border-light border-opacity-25">
-            <div className="text-center mb-3">
-              <div className="position-relative d-inline-block">
-                <img
-                  src={settingsForm.photo}
-                  alt="Perfil"
-                  className="rounded-circle border border-white border-3"
-                  width="60"
-                  height="60"
-                  style={{ objectFit: 'cover' }}
-                />
-                <div
-                  className="position-absolute bottom-0 end-0 bg-success rounded-circle border border-white"
-                  style={{ width: '18px', height: '18px' }}
-                ></div>
-              </div>
-            </div>
-            <div className="text-center">
-              <h6 className="mb-1 fw-bold">{employeeData.name}</h6>
-              <small className="text-light opacity-75">{employeeData.role}</small>
-              <div className="d-flex justify-content-center align-items-center mt-2">
-                <Star size={14} className="text-warning me-1" fill="currentColor" />
-                <small className="text-light">{employeeData.rating}</small>
-                <span className="mx-2 text-light opacity-50">•</span>
-                <small className="text-light">{employeeData.completedJobs} trabajos</small>
+          <div className="p-4">
+            <div className="d-flex align-items-center">
+              <div>
+                <h6 className="mb-0" style={{ fontSize: "40px", fontWeight: "bold", marginTop: "15px", color: "#3a88fe" }}>ServiGO</h6>
+                <small className="text-muted">employee</small>
               </div>
             </div>
           </div>
@@ -1362,7 +1308,7 @@ const EmployeeDashboard = () => {
                 <button
                   key={`item-${item.id}`}
                   onClick={() => setActiveSection(item.id)}
-                  className={`btn w-100 text-start mb-1 d-flex align-items-center text-white menu-item ${activeSection === item.id ? 'menu-item-active' : ''
+                  className={`btn w-100 text-start mb-1 d-flex align-items-center text-black menu-item ${activeSection === item.id ? 'menu-item-active' : ''
                     }`}
                   style={{
                     border: 'none',
@@ -1384,6 +1330,171 @@ const EmployeeDashboard = () => {
           </nav>
         </div>
 
+        {/* Sidebar Derecho (Desktop) */}
+        <div className="position-fixed top-0 end-0 h-100 shadow-lg d-none d-lg-block sidebar-desktop-right" style={{ zIndex: 1000, backgroundColor: "#f8f9fa" }}>
+          <div className="p-4">
+            <div className="d-flex align-items-center justify-content-center">
+              <div className="text-center">
+                <div className="d-flex align-items-center">
+                  {/* User Menu Dropdown */}
+                  <div className="position-relative dropdown-container">
+                    <button
+                      className=" d-flex align-items-center"
+                      style={{ border: "none", fontSize: "18px" }}
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                    >
+                      <span className="d-none d-md-inline">"rogrigo"</span>
+                      <div className="p-1">
+                        <div className="position-relative">
+                          <img
+                            src="foto p"
+                            alt="Avatar"
+                            className="rounded-circle border border-white border-3"
+                            width="50"
+                            height="50"
+                            style={{ objectFit: 'cover' }}
+                          />
+                        </div>
+                      </div>
+                    </button>
+
+                    {showUserMenu && (
+                      <div className="position-absolute top-100 end-0 mt-2 bg-white border rounded shadow-lg" style={{ width: '250px', zIndex: 1050 }}>
+                        <div className="p-3 border-bottom">
+                          <div className="d-flex align-items-center">
+                            <div className="bg-primary rounded-circle p-2 me-2">
+                              <User size={16} className="text-white" />
+                            </div>
+                            <div>
+                              <div className="fw-medium small">"rodrigo"</div>
+                              <small className="text-muted" style={{ fontSize: "13px" }}>"rodrigo43@gmail.com"</small>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-1">
+                          <button
+                            className="btn btn-ghost w-100 text-start d-flex align-items-center p-2"
+                            onClick={() => {
+                              setActiveSection('settings');
+                              setShowUserMenu(false);
+                            }}
+                          >
+                            <Users size={16} className="me-2" />
+                            Perfil
+                          </button>
+                          <button className="btn btn-ghost w-100 text-start d-flex align-items-center p-2">
+                            <Settings size={16} className="me-2" />
+                            Configuración
+                          </button>
+                          <button className="btn btn-ghost w-100 text-start d-flex align-items-center p-2">
+                            <Bell size={16} className="me-2" />
+                            Notificaciones
+                          </button>
+                          <hr className="my-1" />
+                          <button className="btn btn-ghost w-100 text-start d-flex align-items-center p-2 text-danger">
+                            <LogOut size={16} className="me-2" />
+                            Cerrar Sesión
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <nav className="p-3">
+            {/* Estadísticas */}
+            <div className="mb-3">
+              <Card variant="outlined" sx={{ borderRadius: '16px', boxShadow: 3 }}>
+                <CardContent>
+                  <Typography variant="h6" fontWeight="bold" mb={2}>
+                    Contactos
+                  </Typography>
+                  <List>
+                    {chatsCerrados.map((chat, index) => {
+                      const estaActivo = chatsActivos.some(c => c.roomId === chat.roomId);
+                      return (
+                        <React.Fragment key={chat.roomId}>
+                          <ListItem
+                            alignItems="flex-start"
+                            sx={{
+                              cursor: estaActivo ? 'default' : 'pointer',
+                              opacity: estaActivo ? 0.5 : 1,
+                              transition: 'none',
+                            }}
+                            onClick={
+                              estaActivo
+                                ? undefined // Si ya está activo, no vuelve a hacer nada
+                                : async () => {
+                                  try {
+                                    const response = await axios.get(`http://localhost:4500/message/history/${chat.roomId}`);
+                                    const historial = response.data;
+
+                                    setChatsActivos(prev => [...prev, chat]);
+
+                                    setMensajesPorSala(prev => ({
+                                      ...prev,
+                                      [chat.roomId]: historial
+                                    }));
+                                  } catch (err) {
+                                    console.error('Error al cargar historial:', err);
+                                  }
+                                }
+                            }
+                          >
+                            <ListItemAvatar>
+                              <Avatar src={chat.fotoUrl} />
+                            </ListItemAvatar>
+                            <ListItemText
+                              primary={chat.destinatario}
+                              secondary={
+                                estaActivo
+                                  ? 'employee'
+                                  : 'employee'
+                              }
+                            />
+                          </ListItem>
+                          {index < chatsCerrados.length - 1 && <Divider component="li" />}
+                        </React.Fragment>
+                      );
+                    })}
+                  </List>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Actividad Reciente */}
+            <div className="mb-3">
+              <div className="card border-0 shadow-sm">
+                <div className="card-body p-3">
+                  <h6 className="card-title mb-2 d-flex align-items-center">
+                    <Clock size={18} className="me-2 text-info" />
+                    Actividad Reciente
+                  </h6>
+                  <div className="small">
+                    <div className="mb-2 pb-2 border-bottom">
+                      <div className="sidebar-chats" style={{ cursor: "pointer" }}>
+
+                      </div>
+                    </div>
+                    <div className="mb-2 pb-2 border-bottom">
+                      <div className="fw-medium">Nueva reserva</div>
+                      <div className="text-muted">Hace 4 horas</div>
+                    </div>
+                    <div>
+                      <div className="fw-medium">Mensaje recibido</div>
+                      <div className="text-muted">Hace 6 horas</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </nav>
+        </div>
+
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
           <div
@@ -1395,29 +1506,6 @@ const EmployeeDashboard = () => {
 
         {/* Mobile Sidebar */}
         <div className={`position-fixed top-0 start-0 h-100 text-white shadow-lg d-lg-none employee-sidebar ${sidebarOpen ? '' : 'd-none'}`} style={{ width: '280px', zIndex: 1000 }}>
-          <div className="p-4 border-bottom border-light border-opacity-25">
-            <div className="d-flex align-items-center justify-content-between">
-              <div className="d-flex align-items-center">
-                <img
-                  src={settingsForm.photo}
-                  alt="Perfil"
-                  className="rounded-circle border border-white me-2"
-                  width="40"
-                  height="40"
-                />
-                <div>
-                  <h6 className="mb-0">{employeeData.name}</h6>
-                  <small className="text-light opacity-75">{employeeData.role}</small>
-                </div>
-              </div>
-              <button
-                className="btn btn-sm btn-outline-light"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
 
           <nav className="p-3">
             {menuItems.map(item => {
@@ -1433,7 +1521,7 @@ const EmployeeDashboard = () => {
                     }`}
                   style={{ border: 'none', background: activeSection === item.id ? 'rgba(255,255,255,0.2)' : 'transparent' }}
                 >
-                  <Icon size={18} className="me-3" />
+                  <Icon size={40} color="#3a88fe" strokeWidth={1.5} className="me-3" />
                   {item.label}
                 </button>
               );
@@ -1444,166 +1532,29 @@ const EmployeeDashboard = () => {
         {/* Main Content */}
         <div className="main-content">
           {/* Header */}
-          <header className="bg-white shadow-sm p-3 mb-4">
-            <div className="d-flex justify-content-between align-items-center">
-              <div className="d-flex align-items-center">
+          <header className="bg-white shadow-sm py-4 mt-4"
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 1000,
+            borderBottom: '1px solid #ddd'
+          }}>
+            <div className="container">
+              <div className="d-flex justify-content-between align-items-center">
                 <button
-                  className="btn btn-outline-secondary d-lg-none me-3"
+                  className="btn btn-outline-secondary d-lg-none"
                   onClick={() => setSidebarOpen(!sidebarOpen)}
                   style={{ borderRadius: '8px' }}
                 >
                   <Menu size={20} />
                 </button>
-
-                {/* Breadcrumb y título dinámico */}
-                <div>
-                  <div className="d-flex align-items-center">
-                    <Home size={16} className="text-muted me-2" />
-                    <span className="text-muted small">Dashboard</span>
-                    <span className="text-muted mx-2">•</span>
-                    <span className="text-dark small fw-medium">
-                      {menuItems.find(item => item.id === activeSection)?.label || 'Panel Principal'}
-                    </span>
-                  </div>
-                  <h4 className="mb-0 text-dark mt-1 d-none d-md-block">
-                    {activeSection === 'settings' ? 'Configuración' : `¡Hola, ${employeeData.name.split(' ')[0]}! 👋`}
-                  </h4>
-                </div>
               </div>
 
               <div className="d-flex align-items-center">
-                {/* Barra de búsqueda */}
-                <div className="position-relative me-3 d-none d-md-block">
-                  <input
-                    type="text"
-                    className="form-control ps-5 border-0 bg-light"
-                    placeholder="Buscar trabajos, clientes..."
-                    style={{ width: '300px', borderRadius: '25px' }}
-                  />
-                  <Search className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" size={18} />
-                </div>
 
-                {/* Estado de trabajo rápido */}
-                <div className="d-none d-lg-flex align-items-center me-3 bg-light px-3 py-2 rounded-pill">
-                  <Activity size={16} className="text-success me-2" />
-
-                  {/* Estado de trabajo rápido */}
-                  <span className="small fw-medium text-success">Disponible</span>
-                  {chatsCerrados.map((chat, index) => (
-                    <div
-                      key={`${chat.roomId}_${index}`}
-                      onClick={async () => {
-                        try {
-                          // 1. Pedimos historial de mensajes desde el backend
-                          const response = await axios.get(`http://localhost:4500/message/history/${chat.roomId}`);
-                          const historial = response.data; // suponiendo que devuelve array de mensajes
-
-                          // 2. Abrimos el chat nuevamente
-                          setChatsActivos(prev => [...prev, chat]);
-
-                          // 3. Quitamos de la lista de cerrados
-                          setChatsCerrados(prev => prev.filter(c => c.roomId !== chat.roomId));
-
-                          // 4. Pasamos los mensajes al ChatBox mediante mensajesPorSala
-                          setMensajesPorSala(prev => ({
-                            ...prev,
-                            [chat.roomId]: historial
-                          }));
-                        } catch (err) {
-                          console.error('Error al cargar historial:', err);
-                        }
-                      }}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <img src={chat.fotoUrl} width={30} height={30} style={{ borderRadius: '50%' }} />
-                      {chat.destinatario}
-                    </div>
-                  ))}
-                </div>
-
-
-                <li onClick={() => setChatVisible(true)} style={{ cursor: 'pointer' }}>
-                  💬 Chat
-                </li>
-
-
-                {/* Notificaciones Dropdown */}
-                <div className="position-relative me-2 dropdown-container">
-                  <button
-                    className="btn btn-outline-secondary position-relative border-0 bg-light"
-                    onClick={() => setShowNotifications(!showNotifications)}
-                    style={{ borderRadius: '12px' }}
-                  >
-                    <Bell size={18} />
-                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge" style={{ fontSize: '0.6em' }}>
-                      4
-                    </span>
-                  </button>
-
-                  {showNotifications && (
-                    <div className="position-absolute top-100 end-0 mt-2 bg-white border rounded-4 shadow-lg" style={{ width: '380px', zIndex: 1050 }}>
-                      <div className="p-3 border-bottom">
-                        <div className="d-flex justify-content-between align-items-center">
-                          <div>
-                            <h6 className="mb-0 fw-bold">Notificaciones</h6>
-                            <small className="text-muted">Tienes {solicitudes && solicitudes.length} notificaciones nuevas</small>
-                          </div>
-                          <button
-                            className="btn-close"
-                            onClick={() => setShowNotifications(false)}
-                          ></button>
-                        </div>
-                      </div>
-                      <div className="p-0" style={{ maxHeight: '400px', overflowY: 'auto', cursor: 'pointer' }}>
-                        {solicitudes.map(element => (
-                          <div key={`servi-${element._id}`} className={`p-3 border-bottom hover-item`}>
-                            <div className="d-flex align-items-start">
-                              <div className="me-3">
-
-                              </div>
-                              <div className="flex-grow-1">
-                                <div className="fw-medium small mb-1">servicio: {element.service}</div>
-                                <div className="text-muted small mb-2">descripción: {element.comment}</div>
-                                <div className="d-flex justify-content-between align-items-center">
-                                  <small className="text-muted">cliente: {element.customerNombre}</small>
-                                  {/*
-                                  {notification.unread && (
-                                    <span className="badge bg-primary" style={{ fontSize: '10px' }}>Nuevo</span>
-                                  )}
-                                    */}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="p-2 border-top bg-light text-center">
-                        <button className="btn btn-sm btn-link text-decoration-none fw-medium">
-                          Ver todas las notificaciones
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
 
                 {/* User Menu Dropdown */}
                 <div className="position-relative dropdown-container">
-                  <button
-                    className="btn btn-outline-secondary d-flex align-items-center border-0 bg-light"
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    style={{ borderRadius: '12px' }}
-                  >
-                    <img
-                      src={settingsForm.photo}
-                      alt="Perfil"
-                      className="rounded-circle me-2"
-                      width="24"
-                      height="24"
-                    />
-                    <span className="d-none d-md-inline fw-medium">{employeeData.name.split(' ')[0]}</span>
-                    <i className="fas fa-chevron-down ms-2 small"></i>
-                  </button>
-
                   {showUserMenu && (
                     <div className="position-absolute top-100 end-0 mt-2 bg-white border rounded-4 shadow-lg" style={{ width: '280px', zIndex: 1050 }}>
                       <div className="p-3 border-bottom">
@@ -1618,12 +1569,6 @@ const EmployeeDashboard = () => {
                           <div className="flex-grow-1">
                             <div className="fw-medium">{employeeData.name}</div>
                             <small className="text-muted d-block">{employeeData.email}</small>
-                            <div className="d-flex align-items-center mt-1">
-                              <Star size={12} className="text-warning me-1" fill="currentColor" />
-                              <small className="text-success fw-medium">{employeeData.rating}</small>
-                              <span className="mx-1 text-muted">•</span>
-                              <small className="text-muted">{employeeData.completedJobs} trabajos</small>
-                            </div>
                           </div>
                         </div>
                       </div>
@@ -1654,6 +1599,22 @@ const EmployeeDashboard = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Navegación principal - Desktop */}
+                <div className="d-none d-lg-flex justify-content-center flex-grow-1">
+                  <div
+                    className="d-flex justify-content-between align-items-center"
+                    style={{ width: '750px' }}
+                  >
+                    <Home size={35} strokeWidth={2} className="text-primary" style={{ cursor: 'pointer' }} />
+                    <Users size={35} strokeWidth={2} className="text-primary" style={{ cursor: 'pointer' }} />
+                    <Store size={35} strokeWidth={2} className="text-primary" style={{ cursor: 'pointer' }} />
+                    <Search size={35} strokeWidth={2} className="text-primary" style={{ cursor: 'pointer' }} />
+                    <Bell size={35} strokeWidth={2} className="text-primary" style={{ cursor: 'pointer' }} />
+                    <MessageCircleMore size={35} strokeWidth={2} className="text-primary" style={{ cursor: 'pointer' }} />
+                  </div>
+                </div>
+
               </div>
             </div>
           </header>
